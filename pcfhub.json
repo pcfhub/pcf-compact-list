@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+
+  "slug": "pcf-compact-list",
+  "name": "Compact List",
+  "tagline": "A Dataverse view as a stacked list of records, for narrow spaces.",
+  "category": "data",
+  "tags": [],
+
+  "control": {
+    "namespace": "PCFHub",
+    "constructor": "CompactList",
+    "type": "dataset",
+    "framework": "standard",
+    "manifestPath": "CompactList/ControlManifest.Input.xml"
+  },
+
+  "links": {
+    "homepage": "https://github.com/pcfhub/pcf-compact-list",
+    "support": "https://github.com/pcfhub/pcf-compact-list/issues",
+    "license": "MIT"
+  },
+
+  "docs": {
+    "path": "docs"
+  },
+
+  "media": {
+    "logo": "media/logo.png",
+    "screenshots": []
+  },
+
+  "demo": {
+    "fidelity": "none",
+    "presets": []
+  }
+}
