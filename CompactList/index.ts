@@ -2,29 +2,32 @@ import { IInputs, IOutputs } from './generated/ManifestTypes';
 
 type DataSet = ComponentFramework.PropertyTypes.DataSet;
 type Column = ComponentFramework.PropertyHelper.DataSetApi.Column;
-type SortDirection = ComponentFramework.PropertyHelper.DataSetApi.Types.SortDirection;
-
-/** `SortDirection` is a numeric union, not an enum object — there is nothing to import. */
-const ASCENDING = 0 as SortDirection;
-const DESCENDING = 1 as SortDirection;
 
 /** The platform's ceiling on a page. Not in the type definitions. */
 const MAX_PAGE_SIZE = 250;
 
+/** What a record shows when the title column is empty for that row. */
+const NO_TITLE = '—';
+
+type PagingMode = 'pager' | 'loadMore';
+
 /**
- * A standard (DOM) dataset control.
+ * A standard (DOM) dataset control that renders a view as a stacked list.
  *
- * A dataset control binds a collection — a view, a subgrid, a canvas table —
- * rather than a single column, and the difference is not just the shape of the
- * data. **A dataset has mutators**, and that changes what `updateView` means.
+ * Two things about it are deliberate and easy to undo by accident.
  *
- * `updateView` runs on every change to any bound value, including the ones this
- * control caused itself. For a field control that shows up as a jumping caret.
- * Here it is an infinite loop: `setPageSize()` does nothing until the next
+ * **A dataset has mutators, and `updateView` runs on every change including the
+ * ones this control caused.** `setPageSize()` does nothing until the next
  * fetch, so it has to be followed by `refresh()` — and `refresh()` fires
- * `updateView`. Every mutator call below is either guarded or in an event
- * handler, and that is the single most important thing to preserve when you
- * edit this file.
+ * `updateView`. Every mutator call below is either guarded on a field this
+ * class owns or sits in an event handler. That is the single most important
+ * property to preserve when editing this file.
+ *
+ * **The two paging modes are one call with different arguments.**
+ * `loadNextPage(true)` turns the page; bare `loadNextPage()` returns the whole
+ * page range, so `sortedRecordIds` accumulates and the list grows. A table
+ * treats the second as a bug. A list wants it: the record you were reading
+ * stays where it was.
  */
 export class CompactList implements ComponentFramework.StandardControl<IInputs, IOutputs> {
     private container!: HTMLDivElement;
@@ -41,7 +44,21 @@ export class CompactList implements ComponentFramework.StandardControl<IInputs, 
      */
     private appliedPageSize = 0;
 
+    /** Empty until the first `updateView`, which is what makes the reset below skippable. */
+    private appliedPagingMode: PagingMode | '' = '';
+
     private page = 1;
+
+    /**
+     * Every render replaces the container's contents, which throws away focus.
+     *
+     * That is survivable for a list of records — they change wholesale anyway —
+     * except on the one control the user presses repeatedly. Clicking "Load
+     * more" triggers a refresh, the refresh re-renders, and the button the
+     * finger or the keyboard was on ceases to exist. So note the intent and
+     * restore it.
+     */
+    private restoreFocusToLoadMore = false;
 
     public init(
         _context: ComponentFramework.Context<IInputs>,
@@ -57,6 +74,7 @@ export class CompactList implements ComponentFramework.StandardControl<IInputs, 
     public updateView(context: ComponentFramework.Context<IInputs>): void {
         const dataset = context.parameters.records;
 
+        this.applyPagingMode(context, dataset);
         this.applyPageSize(context, dataset);
         this.render(context, dataset);
     }
@@ -76,19 +94,59 @@ export class CompactList implements ComponentFramework.StandardControl<IInputs, 
         this.container.innerHTML = '';
     }
 
+    // ------------------------------------------------------------- platform
+
+    /**
+     * Switching between pager and load-more mid-list has to start over.
+     *
+     * Going pager → loadMore with three pages already turned would append the
+     * fourth onto a list showing only the third; going the other way would page
+     * within an accumulated set. Neither is a state worth reasoning about.
+     *
+     * Skipped on the first `updateView`, when `appliedPagingMode` is still
+     * empty: there is nothing to reset, and `applyPageSize` below is about to
+     * refresh anyway.
+     */
+    private applyPagingMode(context: ComponentFramework.Context<IInputs>, dataset: DataSet): void {
+        const wanted = this.pagingMode(context);
+
+        if (wanted === this.appliedPagingMode) {
+            return;
+        }
+
+        const first = this.appliedPagingMode === '';
+
+        this.appliedPagingMode = wanted;
+
+        if (first) {
+            return;
+        }
+
+        this.page = 1;
+        dataset.paging.reset();
+        dataset.refresh();
+    }
+
     /** Ask for a new page size, but only when it actually changed. See the note above. */
     private applyPageSize(context: ComponentFramework.Context<IInputs>, dataset: DataSet): void {
         const raw = context.parameters.pageSize.raw ?? 25;
-        const wanted = Math.min(Math.max(Math.trunc(raw), 1), MAX_PAGE_SIZE);
+        const wanted = clamp(raw, 1, MAX_PAGE_SIZE);
 
         if (wanted === this.appliedPageSize) {
             return;
         }
 
         this.appliedPageSize = wanted;
+        this.page = 1;
         dataset.paging.setPageSize(wanted);
         dataset.refresh();
     }
+
+    private pagingMode(context: ComponentFramework.Context<IInputs>): PagingMode {
+        return String(context.parameters.paging.raw ?? 'pager') === 'loadMore' ? 'loadMore' : 'pager';
+    }
+
+    // --------------------------------------------------------------- render
 
     private render(context: ComponentFramework.Context<IInputs>, dataset: DataSet): void {
         const getString = (id: string): string => context.resources.getString(id);
@@ -101,19 +159,18 @@ export class CompactList implements ComponentFramework.StandardControl<IInputs, 
         }
 
         if (dataset.error) {
-            this.message(dataset.errorMessage || getString('CompactList_Error'));
+            this.message(dataset.errorMessage || getString('CompactList_Error'), true);
             return;
         }
 
         // `isHidden` and `order` are the maker's decisions in the view
-        // designer. A table that ignores either looks broken to whoever set
-        // them.
+        // designer. A list that ignores either looks broken to whoever set them.
         const columns = (dataset.columns ?? [])
             .filter((column) => !column.isHidden)
             .sort((a, b) => a.order - b.order);
 
         // A canvas app supplies only the columns picked in the Items Fields
-        // flyout. None picked is a real state, and an empty <table> reads as a
+        // flyout. None picked is a real state, and an empty <ul> reads as a
         // broken control rather than as an unfinished configuration.
         if (columns.length === 0) {
             this.message(
@@ -131,65 +188,46 @@ export class CompactList implements ComponentFramework.StandardControl<IInputs, 
             return;
         }
 
-        this.container.appendChild(this.table(dataset, columns, ids, getString));
-        this.container.appendChild(this.pager(dataset, ids.length, getString));
+        this.container.appendChild(this.list(context, dataset, columns, ids, getString));
+        this.container.appendChild(this.footer(context, dataset, ids.length, getString));
+
+        if (this.restoreFocusToLoadMore) {
+            this.restoreFocusToLoadMore = false;
+            this.container.querySelector<HTMLButtonElement>('.CompactList-loadMore')?.focus();
+        }
     }
 
-    private message(text: string): void {
+    private message(text: string, isError = false): void {
         const p = document.createElement('p');
-        p.className = 'CompactList-message';
+        p.className = isError ? 'CompactList-message CompactList-error' : 'CompactList-message';
         p.textContent = text;
         this.container.appendChild(p);
     }
 
-    private table(
+    private list(
+        context: ComponentFramework.Context<IInputs>,
         dataset: DataSet,
         columns: Column[],
         ids: string[],
         getString: (id: string) => string,
     ): HTMLElement {
-        const table = document.createElement('table');
-        table.className = 'CompactList-table';
+        const title = this.titleColumn(context, columns);
+        const details = this.detailColumns(context, columns, title);
+        const showLabels = context.parameters.showLabels.raw !== false;
+        const openOnClick = context.parameters.openOnItemClick.raw !== false;
+        const compact = String(context.parameters.density.raw ?? 'comfortable') === 'compact';
 
-        const caption = document.createElement('caption');
-        caption.className = 'CompactList-caption';
-        caption.textContent = dataset.getTitle();
-        table.appendChild(caption);
+        const list = document.createElement('ul');
+        list.className = compact ? 'CompactList-items is-compact' : 'CompactList-items';
 
-        const head = table.createTHead().insertRow();
+        // The view's name, so a screen reader can tell one list on a form from
+        // another. A <ul> takes an accessible name directly; there is no
+        // <caption> to hide the way a table has.
+        list.setAttribute('aria-label', dataset.getTitle());
 
-        for (const column of columns) {
-            const th = document.createElement('th');
-            th.scope = 'col';
-
-            // The fixture format cannot express a non-sortable column, so
-            // `undefined` means sortable — which is what a view reports for an
-            // ordinary column too.
-            if (column.disableSorting) {
-                th.textContent = column.displayName;
-            } else {
-                const status = dataset.sorting.find((entry) => entry.name === column.name);
-                th.setAttribute(
-                    'aria-sort',
-                    status ? (status.sortDirection === DESCENDING ? 'descending' : 'ascending') : 'none',
-                );
-
-                // A real <button>, so sorting is reachable by keyboard. A click
-                // handler on the <th> is not.
-                const button = document.createElement('button');
-                button.type = 'button';
-                button.className = 'CompactList-sort';
-                button.textContent = column.displayName;
-                button.title = getString('CompactList_SortBy').replace('{0}', column.displayName);
-                button.addEventListener('click', () => this.sortBy(dataset, column.name));
-                th.appendChild(button);
-            }
-
-            head.appendChild(th);
+        if (dataset.loading) {
+            list.classList.add('is-loading');
         }
-
-        const body = table.createTBody();
-        const primary = columns.find((column) => column.isPrimary) ?? columns[0];
 
         for (const id of ids) {
             const record = dataset.records[id];
@@ -198,42 +236,182 @@ export class CompactList implements ComponentFramework.StandardControl<IInputs, 
                 continue;
             }
 
-            const row = body.insertRow();
+            const item = document.createElement('li');
+            item.className = 'CompactList-item';
 
-            for (const column of columns) {
-                const cell = row.insertCell();
+            const heading = record.getFormattedValue(title.name) || NO_TITLE;
 
-                if (column.name === primary.name) {
-                    const button = document.createElement('button');
-                    button.type = 'button';
-                    button.className = 'CompactList-open';
-                    button.textContent = record.getFormattedValue(column.name);
-                    button.title = getString('CompactList_OpenRecord').replace(
-                        '{0}',
-                        record.getFormattedValue(primary.name),
-                    );
-                    button.addEventListener('click', () => this.openRecord(dataset, id));
-                    cell.appendChild(button);
-                } else {
-                    // `getFormattedValue` takes the column's *name*. With
-                    // property-set roles the column is found by `alias` and read
-                    // by `name`, and getting that backwards renders zero rows
-                    // against real data while looking fine in a demo fixture.
-                    cell.textContent = record.getFormattedValue(column.name);
-                }
+            if (openOnClick) {
+                // A real <button>, so opening is reachable by keyboard. A click
+                // handler on the <li> is not.
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'CompactList-title';
+                button.textContent = heading;
+                button.title = getString('CompactList_OpenRecord').replace('{0}', heading);
+                button.addEventListener('click', () => this.openRecord(dataset, id));
+                item.appendChild(button);
+            } else {
+                const span = document.createElement('span');
+                span.className = 'CompactList-title';
+                span.textContent = heading;
+                item.appendChild(span);
             }
+
+            const pairs = this.details(record, details, showLabels);
+
+            if (pairs) {
+                item.appendChild(pairs);
+            }
+
+            list.appendChild(item);
         }
 
-        const scroll = document.createElement('div');
-        scroll.className = dataset.loading ? 'CompactList-scroll is-loading' : 'CompactList-scroll';
-        scroll.appendChild(table);
+        return list;
+    }
 
-        return scroll;
+    /**
+     * The detail lines, as a <dl>.
+     *
+     * Empty values are skipped rather than rendered blank. A table has to keep
+     * the cell — the column is still there — but a list has no grid to hold
+     * open, and a run of empty lines is the difference between this control and
+     * a table with the headers turned off.
+     *
+     * `showLabels` hides the <dt> **visually**, in CSS, rather than omitting it.
+     * A <dl> of bare <dd> elements is malformed, and a screen reader reading
+     * four unlabelled values in a row has no idea what any of them are.
+     */
+    private details(
+        record: ComponentFramework.PropertyHelper.DataSetApi.EntityRecord,
+        columns: Column[],
+        showLabels: boolean,
+    ): HTMLElement | null {
+        if (columns.length === 0) {
+            return null;
+        }
+
+        const dl = document.createElement('dl');
+        dl.className = showLabels ? 'CompactList-details' : 'CompactList-details is-labelless';
+        let rendered = 0;
+
+        for (const column of columns) {
+            // `getFormattedValue` takes the column's *name*. With property-set
+            // roles the column is found by `alias` and read by `name`, and
+            // getting that backwards renders zero values against real data
+            // while looking fine in a demo fixture.
+            const value = record.getFormattedValue(column.name);
+
+            if (!value) {
+                continue;
+            }
+
+            const dt = document.createElement('dt');
+            dt.className = 'CompactList-label';
+            dt.textContent = column.displayName;
+
+            const dd = document.createElement('dd');
+            dd.className = 'CompactList-value';
+            dd.textContent = value;
+
+            dl.append(dt, dd);
+            rendered += 1;
+        }
+
+        return rendered > 0 ? dl : null;
+    }
+
+    /**
+     * Which column is the title line.
+     *
+     * `titleColumn` is a plain input rather than a property-set role, so the
+     * maker types a logical name and can get it wrong. A name that matches
+     * nothing falls back rather than rendering a list of dashes — the fallback
+     * is `isPrimary`, which is the view's own answer to the same question.
+     */
+    private titleColumn(context: ComponentFramework.Context<IInputs>, columns: Column[]): Column {
+        const named = (context.parameters.titleColumn.raw ?? '').trim();
+        const chosen = named ? columns.find((column) => column.name === named) : undefined;
+
+        return chosen ?? columns.find((column) => column.isPrimary) ?? columns[0];
+    }
+
+    /** The columns beneath the title, in the view's order, capped by `detailColumns`. */
+    private detailColumns(
+        context: ComponentFramework.Context<IInputs>,
+        columns: Column[],
+        title: Column,
+    ): Column[] {
+        const wanted = clamp(context.parameters.detailColumns.raw ?? 3, 0, columns.length);
+
+        return columns.filter((column) => column.name !== title.name).slice(0, wanted);
+    }
+
+    // --------------------------------------------------------------- paging
+
+    private footer(
+        context: ComponentFramework.Context<IInputs>,
+        dataset: DataSet,
+        shownOnPage: number,
+        getString: (id: string) => string,
+    ): HTMLElement {
+        return this.pagingMode(context) === 'loadMore'
+            ? this.loadMore(dataset, shownOnPage, getString)
+            : this.pager(dataset, shownOnPage, getString);
+    }
+
+    /**
+     * Append, rather than turn.
+     *
+     * `loadNextPage()` with no argument is documented as returning results for
+     * the whole page range, so `sortedRecordIds` comes back holding pages 1..N
+     * and the next render simply has more items in it. There is no accumulator
+     * to keep here, and deliberately so — a local copy of the records would be
+     * a second source of truth that a sort or a refresh silently invalidates.
+     */
+    private loadMore(dataset: DataSet, shown: number, getString: (id: string) => string): HTMLElement {
+        const wrap = document.createElement('div');
+        wrap.className = 'CompactList-footer';
+
+        const total = dataset.paging.totalResultCount;
+
+        const status = document.createElement('span');
+        status.className = 'CompactList-status';
+        status.setAttribute('aria-live', 'polite');
+        status.textContent =
+            total < 0
+                ? getString('CompactList_LoadedStatusUnknown').replace('{0}', String(shown))
+                : getString('CompactList_LoadedStatus')
+                      .replace('{0}', String(shown))
+                      .replace('{1}', String(total));
+
+        wrap.appendChild(status);
+
+        if (dataset.paging.hasNextPage) {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'CompactList-loadMore';
+            button.textContent = getString('CompactList_LoadMore');
+            button.disabled = dataset.loading;
+            button.addEventListener('click', () => {
+                if (!dataset.paging.hasNextPage) {
+                    return;
+                }
+
+                // The re-render this causes destroys this very button.
+                this.restoreFocusToLoadMore = true;
+                dataset.paging.loadNextPage();
+            });
+
+            wrap.appendChild(button);
+        }
+
+        return wrap;
     }
 
     private pager(dataset: DataSet, rowsOnPage: number, getString: (id: string) => string): HTMLElement {
         const wrap = document.createElement('div');
-        wrap.className = 'CompactList-pager';
+        wrap.className = 'CompactList-footer CompactList-pager';
 
         const previous = document.createElement('button');
         previous.type = 'button';
@@ -249,7 +427,7 @@ export class CompactList implements ComponentFramework.StandardControl<IInputs, 
         });
 
         const status = document.createElement('span');
-        status.className = 'CompactList-pagerStatus';
+        status.className = 'CompactList-status';
         status.setAttribute('aria-live', 'polite');
         status.textContent = this.pagerLabel(dataset, rowsOnPage, getString);
 
@@ -264,10 +442,10 @@ export class CompactList implements ComponentFramework.StandardControl<IInputs, 
 
             this.page += 1;
 
-            // `loadNextPage()` with no argument is infinite scroll, not paging:
-            // the type definition says it returns results for the whole page
-            // range, so `sortedRecordIds` accumulates pages 1..N and the table
-            // grows instead of turning. `true` limits it to the new page.
+            // `true` is what makes this a pager. Without it the platform
+            // returns the whole page range and the list grows instead of
+            // turning — which is the other mode, reached by a property rather
+            // than by forgetting an argument.
             dataset.paging.loadNextPage(true);
         });
 
@@ -299,30 +477,6 @@ export class CompactList implements ComponentFramework.StandardControl<IInputs, 
     }
 
     /**
-     * Sorting is server-side, applied across every page.
-     *
-     * That is the reason not to sort in the browser: a client-side sort
-     * reorders the rows on screen — 25 out of 240 — which is a wrong answer
-     * that looks completely right.
-     *
-     * `dataset.sorting` is an array you mutate in place, and it is the whole
-     * ORDER BY. Replacing rather than appending is what stops three clicks
-     * building a three-deep sort nobody asked for.
-     */
-    private sortBy(dataset: DataSet, columnName: string): void {
-        const current = dataset.sorting.find((status) => status.name === columnName);
-        const direction: SortDirection = current?.sortDirection === ASCENDING ? DESCENDING : ASCENDING;
-
-        dataset.sorting.length = 0;
-        dataset.sorting.push({ name: columnName, sortDirection: direction });
-
-        // A new order makes "page 4" meaningless.
-        this.page = 1;
-        dataset.paging.reset();
-        dataset.refresh();
-    }
-
-    /**
      * Notify before opening, so the output is observable even on a host where
      * `openDatasetItem` does nothing — which is the canvas case.
      *
@@ -340,4 +494,8 @@ export class CompactList implements ComponentFramework.StandardControl<IInputs, 
         this.notifyOutputChanged();
         dataset.openDatasetItem(record.getNamedReference());
     }
+}
+
+function clamp(value: number, low: number, high: number): number {
+    return Math.min(Math.max(Math.trunc(value), low), high);
 }

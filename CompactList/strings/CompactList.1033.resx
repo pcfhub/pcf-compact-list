@@ -84,7 +84,61 @@
     <value>Page size</value>
   </data>
   <data name="PageSize_Desc" xml:space="preserve">
-    <value>How many rows to request per page. The platform may clamp large values.</value>
+    <value>How many records to request per page. The platform may clamp large values.</value>
+  </data>
+
+  <data name="Paging_Name" xml:space="preserve">
+    <value>Paging</value>
+  </data>
+  <data name="Paging_Desc" xml:space="preserve">
+    <value>Whether further pages replace the list or are appended to it.</value>
+  </data>
+  <data name="Paging_Pager_Name" xml:space="preserve">
+    <value>Pager (previous and next)</value>
+  </data>
+  <data name="Paging_LoadMore_Name" xml:space="preserve">
+    <value>Load more (append)</value>
+  </data>
+
+  <data name="TitleColumn_Name" xml:space="preserve">
+    <value>Title column</value>
+  </data>
+  <data name="TitleColumn_Desc" xml:space="preserve">
+    <value>Logical name of the column to use as each item's title. Leave empty to use the view's primary column.</value>
+  </data>
+
+  <data name="DetailColumns_Name" xml:space="preserve">
+    <value>Detail lines</value>
+  </data>
+  <data name="DetailColumns_Desc" xml:space="preserve">
+    <value>How many further columns to show beneath the title. Zero shows the title alone.</value>
+  </data>
+
+  <data name="ShowLabels_Name" xml:space="preserve">
+    <value>Show labels</value>
+  </data>
+  <data name="ShowLabels_Desc" xml:space="preserve">
+    <value>Prefix each detail line with its column name.</value>
+  </data>
+
+  <data name="Density_Name" xml:space="preserve">
+    <value>Density</value>
+  </data>
+  <data name="Density_Desc" xml:space="preserve">
+    <value>How much space each item takes.</value>
+  </data>
+  <data name="Density_Comfortable_Name" xml:space="preserve">
+    <value>Comfortable</value>
+  </data>
+  <data name="Density_Compact_Name" xml:space="preserve">
+    <value>Compact</value>
+  </data>
+
+  <data name="OpenOnItemClick_Name" xml:space="preserve">
+    <value>Open on click</value>
+  </data>
+  <data name="OpenOnItemClick_Desc" xml:space="preserve">
+    <value>Make each item's title a button that opens the record. Turn off for a read-only list.</value>
   </data>
 
   <data name="OpenedRecordId_Name" xml:space="preserve">
@@ -101,7 +155,7 @@
     <value>No records.</value>
   </data>
   <data name="CompactList_NoColumns" xml:space="preserve">
-    <value>No columns are selected for this table.</value>
+    <value>No columns are selected for this list.</value>
   </data>
   <data name="CompactList_Error" xml:space="preserve">
     <value>This view could not be loaded.</value>
@@ -118,8 +172,14 @@
   <data name="CompactList_RangeStatus" xml:space="preserve">
     <value>{0}–{1} of {2}</value>
   </data>
-  <data name="CompactList_SortBy" xml:space="preserve">
-    <value>Sort by {0}</value>
+  <data name="CompactList_LoadMore" xml:space="preserve">
+    <value>Load more</value>
+  </data>
+  <data name="CompactList_LoadedStatus" xml:space="preserve">
+    <value>{0} of {1} shown</value>
+  </data>
+  <data name="CompactList_LoadedStatusUnknown" xml:space="preserve">
+    <value>{0} shown</value>
   </data>
   <data name="CompactList_OpenRecord" xml:space="preserve">
     <value>Open {0}</value>

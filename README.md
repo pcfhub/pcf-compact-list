@@ -20,42 +20,85 @@ recompiles it.
 
 ## What it does
 
-<!--
-  A few paragraphs, not a feature list. Answer what the built-in control does
-  not do, then spend the rest on the one or two decisions a reader would
-  otherwise question — the binding shape, a behaviour that looks like a bug
-  until you know why, a constraint you chose to accept.
+Renders a dataset — a subgrid's view, a canvas `Items` table — as a stack of
+items rather than a grid. Each record gets a title line from the view's primary
+column and a few detail lines beneath it. No header row, and nothing scrolls
+sideways.
 
-  This is the section that saves an issue being opened.
--->
+The case it exists for is width. A subgrid in a form's side column or a phone
+layout has to squeeze its columns or grow a horizontal scrollbar, and neither is
+good. Stacking trades vertical space, which a form already scrolls, for the
+horizontal space it does not have.
+
+Three decisions a reader might otherwise question:
+
+**No `property-set` roles.** A role is a fixed slot — declare `titleField` and
+`subtitleField` and the control is capped at exactly those. What this control
+needs instead already exists on `dataset.columns`: which column is primary, what
+order they go in, which are hidden, what each is called. So the view decides,
+and `titleColumn` is a plain input for the one case where `isPrimary` names the
+wrong column. The cost is that there is no per-column configuration at all, and
+that is deliberate rather than unfinished.
+
+**Empty values are skipped, not blanked.** A record with no phone number shows
+one fewer line. A table has to hold the cell open because the column is still
+there; a list has no grid to hold open, and a run of empty lines is exactly what
+separates this from a table with its headers switched off.
+
+**The two paging modes are one platform call with different arguments.**
+`loadNextPage(true)` turns the page. Bare `loadNextPage()` returns the whole page
+range, so `sortedRecordIds` accumulates and the list grows — which is documented
+elsewhere as the trap a table falls into, and is precisely what a list wants.
+See `SPEC.md`; the accumulate path is reasoned from the type definitions and has
+not been observed against a real view.
+
+**Standard, not React.** No React, no Fluent, no `<platform-library>` entries —
+one file of DOM. See the bundle numbers in `SPEC.md`, which are less lopsided
+than that makes it sound.
 
 ## Properties
 
-<!--
-  The whole configuration surface, including the defaults. `docs/api.md`
-  generates its tables from the manifest; this one is hand-written, so keep it
-  short enough to stay true.
-
-  Follow it with the notes that do not fit a table: which languages the .resx
-  ship, whether the control bundles a framework or uses the platform's, and any
-  property whose accepted values need spelling out.
--->
+All optional. `docs/api.md` generates its tables from the manifest; this one is
+hand-written, so it stays short.
 
 | Property | Type | Usage | Default | What it controls |
 | --- | --- | --- | --- | --- |
-| `value` | SingleLine.Text | bound, **required** | — | The column this control reads and writes |
+| `records` | dataset | bound | — | The view or table to render |
+| `pageSize` | Whole.None | input | `25` | Records requested per page; clamped to 1–250 |
+| `paging` | Enum | input | `pager` | `pager` turns pages, `loadMore` appends them |
+| `titleColumn` | SingleLine.Text | input | — | Logical name of the title column; empty uses `isPrimary` |
+| `detailColumns` | Whole.None | input | `3` | Further columns shown beneath the title; `0` is title-only |
+| `showLabels` | TwoOptions | input | `true` | Draw each detail line's column name |
+| `density` | Enum | input | `comfortable` | `comfortable` or `compact` |
+| `openOnItemClick` | TwoOptions | input | `true` | Title is a button calling `openDatasetItem()` |
+| `openedRecordId` | SingleLine.Text | output | — | Id of the record whose title was last clicked |
+
+`showLabels` off hides the `<dt>` in CSS rather than omitting it, so a screen
+reader still announces what each value is.
+
+Strings ship in **English (1033) only**. The sibling controls carry five
+languages; this one does not yet.
+
+No `<feature-usage>` is declared, because nothing is used — no Web API, no
+device, no navigation. Installing it presents no permission prompt.
 
 ## On the hub
 
-<!--
-  What `demo.fidelity` is, and *why* it is that and not the next one up. A
-  `limited` demo should say which interactions do not work there; a `full` one
-  is worth explaining, because it follows from the control not reaching Web API,
-  device or navigation — which is also one fewer permission prompt for the maker
-  installing it.
+`demo.fidelity` is **`limited`**, and the limitation is the harness rather than
+the control. The demo serves the whole fixture as a single page and reports no
+next or previous page, so the pager renders disabled and **Load more** never
+appears at all — which means the demo cannot show the difference between the two
+paging modes, the one thing most worth seeing. `openDatasetItem()` is a logged
+mock call there too, though `openedRecordId` still updates.
 
-  Mention what the presets cover. Delete this section if fidelity is `none`.
--->
+`full` would be a lie for a dataset control that pages, and `mocked` would claim
+the interactions work against simulated data when paging does not work there at
+all.
+
+Two presets: **Comfortable** (three labelled lines, pager) and **Compact, no
+labels** (two unlabelled lines, tighter spacing, load-more). The fixture is 24
+accounts in `demo/records.json`, several with deliberately empty values so the
+skip-empty behaviour is visible.
 
 ## Install
 

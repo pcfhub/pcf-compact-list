@@ -2,12 +2,12 @@
   Every rule is scoped under .CompactList.
 
   A code component's CSS is loaded into the whole page, not into a shadow root,
-  so an unscoped `table { }` here restyles the host form.
+  so an unscoped `ul { }` here restyles the host form.
 
-  The colours are Fluent design tokens, which FluentProvider emits as CSS custom
-  properties on its own wrapper — so the table picks up the host's theme without
-  importing a single Fluent component. The fallbacks after each comma are what
-  the control looks like if that ever stops being true.
+  The colours are Fluent design tokens, which the host emits as CSS custom
+  properties — so the list picks up the theme without importing a single Fluent
+  component. The fallbacks after each comma are what the control looks like if
+  that ever stops being true.
 */
 
 .CompactList {
@@ -30,28 +30,120 @@
     color: var(--colorPaletteRedForeground1, #b10e1c);
 }
 
-/* Wide views scroll inside the control rather than widening the form. */
-.CompactList-scroll {
-    overflow-x: auto;
+/* ------------------------------------------------------------------ items */
+
+.CompactList-items {
+    list-style: none;
+    margin: 0;
+    padding: 0;
     width: 100%;
 }
 
 /*
-  Dim rather than blank while a page loads. Replacing the rows with a spinner
-  makes every sort and page turn flash empty.
+  Dim rather than blank while a page loads. Replacing the items with a spinner
+  makes every page turn flash empty — and in load-more mode it would blank the
+  records the user is already reading.
 */
-.CompactList-scroll.is-loading {
+.CompactList-items.is-loading {
     opacity: 0.6;
 }
 
-.CompactList-table {
-    border-collapse: collapse;
-    width: 100%;
-    table-layout: fixed;
+.CompactList-item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacingVerticalXXS, 2px);
+    padding: var(--spacingVerticalS, 8px) var(--spacingHorizontalS, 8px);
+    border-bottom: 1px solid var(--colorNeutralStroke2, #e0e0e0);
 }
 
-/* The title names the table for a screen reader without taking up space. */
-.CompactList-caption {
+.CompactList-items.is-compact .CompactList-item {
+    gap: 0;
+    padding: var(--spacingVerticalXS, 4px) var(--spacingHorizontalS, 8px);
+}
+
+/*
+  No horizontal scroll anywhere in this control — that is the whole reason it
+  exists rather than a table. Long values wrap.
+*/
+.CompactList-title,
+.CompactList-value {
+    overflow-wrap: anywhere;
+}
+
+.CompactList-title {
+    font-weight: var(--fontWeightSemibold, 600);
+    text-align: left;
+}
+
+/* The title is a real <button>, so undo the browser's chrome rather than using a div. */
+button.CompactList-title {
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    font: inherit;
+    font-weight: var(--fontWeightSemibold, 600);
+    color: var(--colorBrandForegroundLink, #0f6cbd);
+    cursor: pointer;
+}
+
+button.CompactList-title:hover {
+    text-decoration: underline;
+}
+
+/*
+  Never remove the focus ring. A list whose only interactive element is the
+  title is unusable by keyboard without it.
+*/
+.CompactList button:focus-visible {
+    outline: 2px solid var(--colorStrokeFocus2, #0f6cbd);
+    outline-offset: 2px;
+    border-radius: var(--borderRadiusSmall, 2px);
+}
+
+/* ---------------------------------------------------------------- details */
+
+/*
+  A two-column grid — label, then value — so every pair gets its own row and the
+  values line up with each other. Grid rather than flex because flex wrapping
+  cannot express "break after each pair" without wrapper elements the <dl> is
+  not allowed to have.
+*/
+.CompactList-details {
+    margin: 0;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    column-gap: var(--spacingHorizontalXS, 4px);
+    color: var(--colorNeutralForeground2, #424242);
+    font-size: var(--fontSizeBase200, 12px);
+}
+
+.CompactList-label {
+    color: var(--colorNeutralForeground3, #616161);
+}
+
+.CompactList-label::after {
+    content: ':';
+}
+
+.CompactList-value {
+    margin: 0;
+}
+
+/*
+  `showLabels` off hides the <dt> visually and leaves it in the accessibility
+  tree. Omitting it from the DOM instead would make the <dl> malformed and give
+  a screen reader four unlabelled values in a row.
+
+  Taking it out of flow is also what collapses the grid to one column, so the
+  values start at the left edge rather than in a second track with an empty
+  first one.
+*/
+.CompactList-details.is-labelless {
+    grid-template-columns: 1fr;
+}
+
+.CompactList-details.is-labelless .CompactList-label {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -60,95 +152,40 @@
     white-space: nowrap;
 }
 
-.CompactList-table th,
-.CompactList-table td {
-    text-align: start;
-    padding: var(--spacingVerticalS, 8px) var(--spacingHorizontalM, 12px);
-    border-bottom: 1px solid var(--colorNeutralStroke2, #e0e0e0);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
+/* ----------------------------------------------------------------- footer */
 
-.CompactList-table th {
-    font-weight: var(--fontWeightSemibold, 600);
-    border-bottom: 1px solid var(--colorNeutralStroke1, #d1d1d1);
-}
-
-.CompactList-table tbody tr:hover {
-    background-color: var(--colorNeutralBackground1Hover, #f5f5f5);
-}
-
-
-
-/*
-  The sort control and the open-record control are real buttons, so they are
-  keyboard-reachable. These rules strip the browser chrome without removing the
-  semantics.
-*/
-.CompactList-sort,
-.CompactList-open {
-    font: inherit;
-    color: inherit;
-    background: none;
-    border: none;
-    padding: 0;
-    cursor: pointer;
-    max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.CompactList-sort {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--spacingHorizontalXS, 4px);
-    font-weight: inherit;
-}
-
-.CompactList-open {
-    color: var(--colorBrandForegroundLink, #0f6cbd);
-    text-align: start;
-}
-
-.CompactList-open:hover {
-    text-decoration: underline;
-}
-
-.CompactList-sort:focus-visible,
-.CompactList-open:focus-visible,
-.CompactList-pager button:focus-visible {
-    outline: 2px solid var(--colorStrokeFocus2, #000000);
-    outline-offset: 2px;
-}
-
-.CompactList-arrow {
-    font-size: 0.7em;
-    color: var(--colorNeutralForeground3, #616161);
-}
-
-.CompactList-pager {
+.CompactList-footer {
     display: flex;
     align-items: center;
-    gap: var(--spacingHorizontalM, 12px);
+    gap: var(--spacingHorizontalS, 8px);
+    padding: var(--spacingVerticalXS, 4px) var(--spacingHorizontalS, 8px);
 }
 
-.CompactList-pager button {
+.CompactList-status {
+    color: var(--colorNeutralForeground3, #616161);
+    font-size: var(--fontSizeBase200, 12px);
+}
+
+.CompactList-pager .CompactList-status {
+    flex: 1 1 auto;
+    text-align: center;
+}
+
+.CompactList-footer button {
     font: inherit;
     padding: var(--spacingVerticalXS, 4px) var(--spacingHorizontalM, 12px);
     color: var(--colorNeutralForeground1, #242424);
-    background-color: var(--colorNeutralBackground1, #ffffff);
+    background: var(--colorNeutralBackground1, #ffffff);
     border: 1px solid var(--colorNeutralStroke1, #d1d1d1);
     border-radius: var(--borderRadiusMedium, 4px);
     cursor: pointer;
 }
 
-.CompactList-pager button:disabled {
-    color: var(--colorNeutralForegroundDisabled, #bdbdbd);
-    border-color: var(--colorNeutralStrokeDisabled, #e0e0e0);
-    cursor: default;
+.CompactList-footer button:hover:not(:disabled) {
+    background: var(--colorNeutralBackground1Hover, #f5f5f5);
 }
 
-.CompactList-pagerStatus {
-    color: var(--colorNeutralForeground3, #616161);
+.CompactList-footer button:disabled {
+    color: var(--colorNeutralForegroundDisabled, #bdbdbd);
+    cursor: default;
 }

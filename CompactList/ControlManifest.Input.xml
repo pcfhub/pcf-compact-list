@@ -15,54 +15,25 @@
     <external-service-usage enabled="false" />
 
     <!--
-      A dataset control binds a collection rather than a column.
+      No `property-set` roles, deliberately.
 
-      This one declares **no `property-set` roles**, which is a decision worth
-      making deliberately rather than inheriting:
+      A role is a fixed slot: declare `titleField` and `subtitleField` here and
+      the control is capped at exactly those, while the maker with a fourth
+      column to show is stuck. What this control needs instead — which column is
+      primary, which are hidden, what order they go in, what each is called —
+      already exists on `dataset.columns`, put there by whoever built the view.
+      A role cannot supply an `order` for a column it does not know about.
 
-        Declare roles when the control assigns meaning to specific columns — a
-        chip has a label and a colour, a map pin has a latitude and a longitude.
-        Each role is a named slot in this file, so the arity is fixed at whatever
-        you write here.
+      So the columns are the view's, and `titleColumn` below is a plain input
+      for the case where `isPrimary` names the wrong one. That keeps
+      `docs/api.md` free of `::props-table{kind=dataset_column}`, which would
+      render an empty table here.
 
-        Declare none, and read `dataset.columns`, when the control renders
-        whatever it is given. A table is the clearest case: there is no way to
-        declare "however many columns the view has", and the metadata a layout
-        needs — order, visualSizeFactor, isPrimary, isHidden, disableSorting —
-        exists on real view columns and nowhere else.
-
-      If you add roles, add `::props-table{kind=dataset_column}` to docs/api.md.
-      With none, leave it out: the directive renders an empty table, which reads
-      as "this control has no dataset columns" rather than as a missing section.
-
-        <data-set name="records" display-name-key="Records_DataSet_Name">
-          <property-set name="labelField" display-name-key="LabelField_Name"
-                        of-type="SingleLine.Text" usage="bound" required="true" />
-        </data-set>
-
-      The other attribute worth knowing is `cds-data-set-options`, which decides
-      whether a model-driven subgrid keeps its own chrome. Off by default; add it
-      to show any of the three:
-
-        <data-set name="records" display-name-key="Records_DataSet_Name"
-                  cds-data-set-options="displayCommandBar:true;displayViewSelector:true;displayQuickFind:true" />
-
-      It belongs on `<data-set>`, not on `<control>` — it configures the host's
-      furniture, which sounds like a control-level concern and is not.
-
-      Turn the **command bar** on if the control calls `setSelectedRecordIds()`:
-      without it, selection is a value the control reports and nothing acts on.
-      The **view selector** is only sensible if the control renders whatever
-      columns arrive, since switching view changes them. A control with fixed
-      property-set roles usually wants all three off, because its layout does not
-      survive the user picking a different view.
-
-      Two traps. The attribute's value is typed as a plain string, so a
-      misspelled option compiles clean and silently does nothing. And the
-      Microsoft reference marks the attribute `Required: Yes`, which the tooling
-      contradicts — it is optional in fact, and absent means off.
-
-      Model-driven only; canvas apps ignore it.
+      No `cds-data-set-options` either. It configures a model-driven subgrid's
+      own chrome — command bar, view selector, quick find — and all three are
+      off by default. The command bar is the one worth reconsidering, but only
+      for a control that calls `setSelectedRecordIds()`, and this one does not
+      select.
     -->
     <data-set name="records" display-name-key="Records_DataSet_Name" />
 
@@ -73,6 +44,76 @@
               usage="input"
               required="false"
               default-value="25" />
+
+    <!--
+      How the second and subsequent pages arrive.
+
+      "pager" turns pages: loadNextPage(true) replaces the rows on screen.
+      "loadMore" appends them: bare loadNextPage() returns the whole page range,
+      so sortedRecordIds accumulates 1..N and the list simply grows.
+
+      That second behaviour is documented as the trap a table falls into, and it
+      is exactly what a list wants — the record you were reading stays where it
+      was. It is the same call either way; the argument is the whole difference.
+    -->
+    <property name="paging"
+              display-name-key="Paging_Name"
+              description-key="Paging_Desc"
+              of-type="Enum"
+              usage="input"
+              required="false"
+              default-value="pager">
+      <value name="pager" display-name-key="Paging_Pager_Name">pager</value>
+      <value name="loadMore" display-name-key="Paging_LoadMore_Name">loadMore</value>
+    </property>
+
+    <!--
+      The logical name of the column to use as the title line — not a
+      property-set role, which would be a fixed slot the maker fills in the
+      form designer. The control finds the title through `isPrimary` on its own,
+      and this only exists for the view where that is the wrong column.
+    -->
+    <property name="titleColumn"
+              display-name-key="TitleColumn_Name"
+              description-key="TitleColumn_Desc"
+              of-type="SingleLine.Text"
+              usage="input"
+              required="false" />
+
+    <property name="detailColumns"
+              display-name-key="DetailColumns_Name"
+              description-key="DetailColumns_Desc"
+              of-type="Whole.None"
+              usage="input"
+              required="false"
+              default-value="3" />
+
+    <property name="showLabels"
+              display-name-key="ShowLabels_Name"
+              description-key="ShowLabels_Desc"
+              of-type="TwoOptions"
+              usage="input"
+              required="false"
+              default-value="true" />
+
+    <property name="density"
+              display-name-key="Density_Name"
+              description-key="Density_Desc"
+              of-type="Enum"
+              usage="input"
+              required="false"
+              default-value="comfortable">
+      <value name="comfortable" display-name-key="Density_Comfortable_Name">comfortable</value>
+      <value name="compact" display-name-key="Density_Compact_Name">compact</value>
+    </property>
+
+    <property name="openOnItemClick"
+              display-name-key="OpenOnItemClick_Name"
+              description-key="OpenOnItemClick_Desc"
+              of-type="TwoOptions"
+              usage="input"
+              required="false"
+              default-value="true" />
 
     <!--
       Notified *before* the record is opened, so the value is observable even on
@@ -91,16 +132,12 @@
     </resources>
 
     <!--
-      Uncomment only the features actually used. Each one becomes a permission
-      prompt for the maker installing the control.
+      No `<feature-usage>`, because there is nothing to declare. Every feature
+      listed there becomes a permission prompt for the maker installing the
+      control, and this one reaches no Web API, no device and no navigation.
 
-      Note that `openDatasetItem()` needs none of these — it is a method on the
-      dataset itself, not on context.navigation.
-
-    <feature-usage>
-      <uses-feature name="Utility" required="true" />
-      <uses-feature name="WebAPI" required="true" />
-    </feature-usage>
+      `openDatasetItem()` looks like it should need one and does not — it is a
+      method on the dataset itself, not on context.navigation.
     -->
   </control>
 </manifest>

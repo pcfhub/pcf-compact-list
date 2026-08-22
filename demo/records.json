@@ -12,27 +12,43 @@
             "isPrimary": true
         },
         {
-            "name": "accountnumber",
-            "displayName": "Account number",
-            "dataType": "SingleLine.Text",
-            "alias": "accountnumber",
-            "order": 1,
-            "visualSizeFactor": 120
-        },
-        {
             "name": "primarycontactname",
             "displayName": "Primary contact",
             "dataType": "SingleLine.Text",
             "alias": "primarycontactname",
-            "order": 2,
+            "order": 1,
             "visualSizeFactor": 150
+        },
+        {
+            "name": "address1_city",
+            "displayName": "City",
+            "dataType": "SingleLine.Text",
+            "alias": "address1_city",
+            "order": 2,
+            "visualSizeFactor": 120
+        },
+        {
+            "name": "telephone1",
+            "displayName": "Main phone",
+            "dataType": "SingleLine.Phone",
+            "alias": "telephone1",
+            "order": 3,
+            "visualSizeFactor": 120
+        },
+        {
+            "name": "revenue",
+            "displayName": "Annual revenue",
+            "dataType": "Currency",
+            "alias": "revenue",
+            "order": 4,
+            "visualSizeFactor": 110
         },
         {
             "name": "statecode",
             "displayName": "Status",
             "dataType": "OptionSet",
             "alias": "statecode",
-            "order": 3,
+            "order": 5,
             "visualSizeFactor": 90
         }
     ],
@@ -41,8 +57,10 @@
             "id": "a0001",
             "values": {
                 "name": "Fabrikam Manufacturing",
-                "accountnumber": "ACC-1042",
                 "primarycontactname": "Dana Whitfield",
+                "address1_city": "Sheffield",
+                "telephone1": "+44 114 496 0121",
+                "revenue": "£4,200,000.00",
                 "statecode": "Active"
             }
         },
@@ -50,8 +68,10 @@
             "id": "a0002",
             "values": {
                 "name": "Contoso Logistics",
-                "accountnumber": "ACC-1087",
                 "primarycontactname": "Ravi Menon",
+                "address1_city": "Rotterdam",
+                "telephone1": "+31 10 555 0188",
+                "revenue": "£11,750,000.00",
                 "statecode": "Active"
             }
         },
@@ -59,8 +79,10 @@
             "id": "a0003",
             "values": {
                 "name": "Northwind Traders",
-                "accountnumber": "ACC-1103",
                 "primarycontactname": "Erin Boyle",
+                "address1_city": "Bristol",
+                "telephone1": "",
+                "revenue": "£860,000.00",
                 "statecode": "Active"
             }
         },
@@ -68,8 +90,10 @@
             "id": "a0004",
             "values": {
                 "name": "Adventure Works Cycles",
-                "accountnumber": "ACC-1155",
                 "primarycontactname": "Marcus Feld",
+                "address1_city": "Innsbruck",
+                "telephone1": "+43 512 555 0143",
+                "revenue": "£2,300,000.00",
                 "statecode": "Active"
             }
         },
@@ -77,8 +101,10 @@
             "id": "a0005",
             "values": {
                 "name": "Litware Consulting",
-                "accountnumber": "ACC-1178",
                 "primarycontactname": "Priya Raman",
+                "address1_city": "Bengaluru",
+                "telephone1": "+91 80 4555 0177",
+                "revenue": "£1,050,000.00",
                 "statecode": "Inactive"
             }
         },
@@ -86,8 +112,10 @@
             "id": "a0006",
             "values": {
                 "name": "Tailspin Toys",
-                "accountnumber": "ACC-1201",
                 "primarycontactname": "Owen Brackett",
+                "address1_city": "Leeds",
+                "telephone1": "+44 113 496 0155",
+                "revenue": "£640,000.00",
                 "statecode": "Active"
             }
         },
@@ -95,8 +123,10 @@
             "id": "a0007",
             "values": {
                 "name": "Proseware Systems",
-                "accountnumber": "ACC-1233",
                 "primarycontactname": "Alice Nakamura",
+                "address1_city": "Osaka",
+                "telephone1": "+81 6 6555 0190",
+                "revenue": "£9,400,000.00",
                 "statecode": "Active"
             }
         },
@@ -104,8 +134,186 @@
             "id": "a0008",
             "values": {
                 "name": "Wingtip Analytics",
-                "accountnumber": "ACC-1260",
                 "primarycontactname": "Tomas Ehrlich",
+                "address1_city": "Berlin",
+                "telephone1": "+49 30 5550 0134",
+                "revenue": "£3,180,000.00",
+                "statecode": "Active"
+            }
+        },
+        {
+            "id": "a0009",
+            "values": {
+                "name": "Coho Vineyard & Estate Bottling",
+                "primarycontactname": "Marie-Claude Ferrand",
+                "address1_city": "Bordeaux",
+                "telephone1": "+33 5 56 55 0102",
+                "revenue": "£720,000.00",
+                "statecode": "Active"
+            }
+        },
+        {
+            "id": "a0010",
+            "values": {
+                "name": "Blue Yonder Airlines",
+                "primarycontactname": "",
+                "address1_city": "Dublin",
+                "telephone1": "+353 1 555 0166",
+                "revenue": "£28,600,000.00",
+                "statecode": "Active"
+            }
+        },
+        {
+            "id": "a0011",
+            "values": {
+                "name": "Trey Research",
+                "primarycontactname": "Nadia Osei",
+                "address1_city": "Accra",
+                "telephone1": "+233 30 255 0119",
+                "revenue": "£410,000.00",
+                "statecode": "Active"
+            }
+        },
+        {
+            "id": "a0012",
+            "values": {
+                "name": "Woodgrove Bank",
+                "primarycontactname": "Henrik Sørensen",
+                "address1_city": "Copenhagen",
+                "telephone1": "+45 33 55 0147",
+                "revenue": "£54,900,000.00",
+                "statecode": "Active"
+            }
+        },
+        {
+            "id": "a0013",
+            "values": {
+                "name": "Alpine Ski House",
+                "primarycontactname": "Greta Lindqvist",
+                "address1_city": "Åre",
+                "telephone1": "+46 647 555 013",
+                "revenue": "£1,960,000.00",
+                "statecode": "Inactive"
+            }
+        },
+        {
+            "id": "a0014",
+            "values": {
+                "name": "Lucerne Publishing",
+                "primarycontactname": "Paulo Cardoso",
+                "address1_city": "Lisbon",
+                "telephone1": "",
+                "revenue": "£520,000.00",
+                "statecode": "Active"
+            }
+        },
+        {
+            "id": "a0015",
+            "values": {
+                "name": "VanArsdel Ltd",
+                "primarycontactname": "Sunita Kapoor",
+                "address1_city": "Manchester",
+                "telephone1": "+44 161 496 0173",
+                "revenue": "£7,340,000.00",
+                "statecode": "Active"
+            }
+        },
+        {
+            "id": "a0016",
+            "values": {
+                "name": "Relecloud",
+                "primarycontactname": "Jonas Weber",
+                "address1_city": "Zürich",
+                "telephone1": "+41 44 555 0128",
+                "revenue": "£16,200,000.00",
+                "statecode": "Active"
+            }
+        },
+        {
+            "id": "a0017",
+            "values": {
+                "name": "Margie's Travel",
+                "primarycontactname": "Margaret Ainsley",
+                "address1_city": "Edinburgh",
+                "telephone1": "+44 131 496 0104",
+                "revenue": "£380,000.00",
+                "statecode": "Active"
+            }
+        },
+        {
+            "id": "a0018",
+            "values": {
+                "name": "The Phone Company",
+                "primarycontactname": "Yusuf Demir",
+                "address1_city": "Istanbul",
+                "telephone1": "+90 212 555 0192",
+                "revenue": "£12,850,000.00",
+                "statecode": "Active"
+            }
+        },
+        {
+            "id": "a0019",
+            "values": {
+                "name": "Southridge Video",
+                "primarycontactname": "Beatriz Salgado",
+                "address1_city": "São Paulo",
+                "telephone1": "+55 11 5555 0161",
+                "revenue": "£2,740,000.00",
+                "statecode": "Inactive"
+            }
+        },
+        {
+            "id": "a0020",
+            "values": {
+                "name": "Consolidated Messenger",
+                "primarycontactname": "Aoife Gallagher",
+                "address1_city": "Cork",
+                "telephone1": "+353 21 555 0139",
+                "revenue": "£980,000.00",
+                "statecode": "Active"
+            }
+        },
+        {
+            "id": "a0021",
+            "values": {
+                "name": "Graphic Design Institute",
+                "primarycontactname": "Léa Fontaine",
+                "address1_city": "Lyon",
+                "telephone1": "+33 4 72 55 0114",
+                "revenue": "£290,000.00",
+                "statecode": "Active"
+            }
+        },
+        {
+            "id": "a0022",
+            "values": {
+                "name": "Humongous Insurance",
+                "primarycontactname": "Kwame Boateng",
+                "address1_city": "Toronto",
+                "telephone1": "+1 416 555 0158",
+                "revenue": "£61,400,000.00",
+                "statecode": "Active"
+            }
+        },
+        {
+            "id": "a0023",
+            "values": {
+                "name": "Fourth Coffee",
+                "primarycontactname": "Ingrid Halvorsen",
+                "address1_city": "Bergen",
+                "telephone1": "+47 55 55 0181",
+                "revenue": "£455,000.00",
+                "statecode": "Active"
+            }
+        },
+        {
+            "id": "a0024",
+            "values": {
+                "name": "School of Fine Art",
+                "primarycontactname": "Cormac Ó Briain",
+                "address1_city": "Galway",
+                "telephone1": "",
+                "revenue": "",
                 "statecode": "Active"
             }
         }

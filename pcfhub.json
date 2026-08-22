@@ -5,7 +5,7 @@
   "name": "Compact List",
   "tagline": "A Dataverse view as a stacked list of records, for narrow spaces.",
   "category": "data",
-  "tags": [],
+  "tags": ["dataset", "list", "compact", "canvas", "no-react"],
 
   "control": {
     "namespace": "PCFHub",
@@ -31,7 +31,43 @@
   },
 
   "demo": {
-    "fidelity": "none",
-    "presets": []
+    "fidelity": "limited",
+    "bundle": "out/controls/CompactList/bundle.js",
+    "styles": ["out/controls/CompactList/css/CompactList.css"],
+    "datasetFixture": "demo/records.json",
+    "limitations": [
+      "Paging is inert. The harness puts every fixture record on a single page and reports hasNextPage and hasPreviousPage as false, so Previous and Next render disabled and the Load more button does not appear at all. The page size property does nothing either, because the harness's setPageSize() is an empty function.",
+      "Because Load more never appears, the demo cannot show the difference between the two paging modes. Switching the Paging preset changes the footer the control would render on a real view, not what the harness can exercise.",
+      "Clicking an item calls dataset.openDatasetItem(), which the harness logs as a mock call: there is no Dataverse behind this origin and no form to open. The openedRecordId output still updates, so the value a canvas app would react to is visible."
+    ],
+    "presets": [
+      {
+        "slug": "default",
+        "name": "Comfortable",
+        "description": "Three labelled detail lines under each account name, with a pager.",
+        "props": {
+          "pageSize": 25,
+          "paging": "pager",
+          "detailColumns": 3,
+          "showLabels": true,
+          "density": "comfortable",
+          "openOnItemClick": true
+        },
+        "isDefault": true
+      },
+      {
+        "slug": "compact",
+        "name": "Compact, no labels",
+        "description": "Two unlabelled detail lines and tighter spacing — the shape for a narrow form section.",
+        "props": {
+          "pageSize": 25,
+          "paging": "loadMore",
+          "detailColumns": 2,
+          "showLabels": false,
+          "density": "compact",
+          "openOnItemClick": true
+        }
+      }
+    ]
   }
 }

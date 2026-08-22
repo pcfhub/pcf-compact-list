@@ -41,22 +41,29 @@ order: 5
 
 ## Columns
 
-<!--
-  Delete this section if you declare property-set roles — the generated
-  dataset_column table replaces it. Keep it if the control renders the view's
-  own columns, because then there is nothing for a table to list and a reader
-  needs telling why.
--->
-
 The columns are the view's.
 
-This control declares no `property-set` roles, so it renders whatever
-`dataset.columns` reports — the columns the maker put in the view, in the view's
-own `order`, at the view's own widths — and skips the ones marked hidden. There
-is nothing to configure per column.
+This control declares no `property-set` roles, so there is no per-column
+configuration to document — it renders whatever `dataset.columns` reports: the
+columns the maker put in the view, in the view's own `order`, minus the ones
+marked hidden.
 
 | Metadata | Effect |
 | --- | --- |
-| `isPrimary` | That cell becomes the open-record button, and its value names the row for a screen reader. Falls back to the first visible column. |
-| `disableSorting` | No sort control on that column, and no `aria-sort`. |
-| `visualSizeFactor` | Distributed as percentage widths. When every factor is 0 — which canvas reports — the browser lays the table out instead. |
+| `order` | The order of the detail lines. |
+| `isHidden` | Skipped entirely. |
+| `isPrimary` | Becomes the title line, and names the item for a screen reader. Overridden by the **Title column** input; falls back to the first visible column. |
+| `displayName` | The label on each detail line, whether or not **Show labels** draws it. |
+
+`visualSizeFactor` and `disableSorting` are read by table-shaped controls and
+are ignored here — this one has no widths to distribute and no headers to sort
+by.
+
+## How values are read
+
+Every value comes from `getFormattedValue()`, the platform's own formatting. A
+currency arrives with its symbol, a choice as its label, a date in the user's
+format, a lookup as the record's name. The control never sees the raw value,
+which is why it cannot align or colour by type.
+
+A value that formats to an empty string is **skipped**, not rendered blank.
