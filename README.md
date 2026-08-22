@@ -9,15 +9,6 @@ Documentation lives on [PCFHub](https://pcfhub.dev/components/pcf-compact-list),
 from the `docs/` directory in this repository. Edit the Markdown here; the hub
 recompiles it.
 
-<!--
-  This README is for someone standing in the repository — a maintainer, or
-  somebody deciding whether to install the control. The hub publishes `docs/`,
-  not this file, so do not duplicate the documentation here.
-
-  The three sections below are the ones worth writing by hand. Everything after
-  them is the same in every repository and needs no edits.
--->
-
 ## What it does
 
 Renders a dataset — a subgrid's view, a canvas `Items` table — as a stack of
