@@ -18,6 +18,8 @@ Compact List binds a view, so it replaces a **subgrid** — not a field.
 5. Save and publish.
 :::
 
+::image{src=media/screenshot.png alt="An Accounts subgrid rendered by Compact List: each account name is a link, with Status, Status Reason and Created On on labelled lines beneath it, and Previous page disabled on the first of two pages" zoom}
+
 ## What the view controls
 
 Everything about which columns appear:

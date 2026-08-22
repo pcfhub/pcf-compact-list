@@ -265,9 +265,17 @@ trusting this paragraph if the paging code changes again.
   there is unknown: if `loadExactPage` exists on that host it was used, and if
   it does not the `loadNextPage(true)` + slice path was. Both are covered by the
   driver, neither by the platform.
-- **No screenshot, no logo.** `media/logo.png` is the template placeholder and
-  `media/screenshots` is empty, so `docs/` references no images at all. Nothing
-  in CI checks either.
+- **The logo is still the template placeholder.** `media/screenshot.png` is now
+  real — an Accounts subgrid on a form, referenced from `docs/overview.md` and
+  `docs/model-driven.md` — but `media/logo.png` is the one the template ships.
+  Nothing in CI checks either, and `npm run check` validates only the paths
+  named in `pcfhub.json`, not the paths in the Markdown.
+
+  **The screenshot is not evidence the pager fix works.** It shows page 1 —
+  three of six records, "1–3 of 6", Previous correctly disabled — and page 1
+  rendered correctly before the fix too. The jsdom driver's pre-fix run passes
+  every page-1 assertion and fails only after Next is clicked. A screenshot that
+  would settle it is one of page 2.
 - **English only.** `strings/CompactList.1033.resx` is the only resx. The
   sibling controls ship 1031, 1036, 1041 and 3082 as well.
 - **Never imported into an environment.** Everything above is a local build and

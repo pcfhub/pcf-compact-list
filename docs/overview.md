@@ -8,6 +8,8 @@ order: 1
 
 A Dataverse view as a stacked list of records, for narrow spaces.
 
+::image{src=media/screenshot.png alt="Compact List on an Accounts subgrid: three accounts as stacked items, each with its name as a link above labelled Status, Status Reason and Created On lines, over a pager reading 1–3 of 6" zoom}
+
 Each record becomes one item: a title line taken from the view's primary column,
 and a few detail lines beneath it. There is no header row and nothing scrolls
 sideways.
