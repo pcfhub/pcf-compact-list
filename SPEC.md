@@ -39,8 +39,8 @@ Studio 18 Community.
 | `npm run check` | "Template adopted, pcfhub.json readable, control shape agrees with the manifest, docs named correctly, media present." |
 | `npm run refreshTypes` | Succeeded. `IInputs.records` typed as `DataSet`; both Enums generated as string unions (`EnumProperty<"pager" \| "loadMore">`), not as `any`. |
 | `npm run lint` | Clean, no output. |
-| `npm run build` | `out/controls/CompactList/bundle.js`, **20,907 bytes**. |
-| `msbuild /t:build /restore /p:configuration=Release` | **6,872 bytes** packed. `Solution.zip` and `Solution_managed.zip` **9,749 bytes** each. |
+| `npm run build` | `out/controls/CompactList/bundle.js`, **25,650 bytes**. |
+| `msbuild /t:build /restore /p:configuration=Release` | **7,472 bytes** packed. `Solution.zip` and `Solution_managed.zip` **10,021 bytes** each. |
 | `npm start`, driven in a browser | Rendered. Every property path exercised — see below. |
 
 The two bundle figures are different builds, not one measured twice. `out/` and
@@ -80,11 +80,15 @@ built `react_virtual`:
 
 | | Compact List (standard) | Data Table (react_virtual) |
 | --- | --- | --- |
-| `npm run build` | 20,907 B | 33,263 B |
-| msbuild pack | **6,872 B** | **9,020 B** |
-| Solution zip | 9,749 B | 10,330 B |
+| `npm run build` | 25,650 B | 35,694 B |
+| msbuild pack | **7,472 B** | **9,262 B** |
+| Solution zip | 10,021 B | 10,441 B |
 
-**2,148 bytes, or 24%.** Not a fraction — a rounding error on any connection
+*(Both remeasured at v0.1.0, after the pager fix added to each. The first
+draft of this table read 6,872 against 9,020 — same conclusion, and a useful
+reminder that a measured number has a date on it.)*
+
+**1,790 bytes, or 19%.** Not a fraction — a rounding error on any connection
 that is going to load a Dataverse form at all.
 
 The reason is that React and Fluent were never *in* Data Table's bundle either.
