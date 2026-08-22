@@ -50,15 +50,15 @@ export class CompactList implements ComponentFramework.StandardControl<IInputs, 
     private page = 1;
 
     /**
-     * Every render replaces the container's contents, which throws away focus.
+     * Which footer button to put focus back on after the next render.
      *
+     * Every render replaces the container's contents, which throws away focus.
      * That is survivable for a list of records — they change wholesale anyway —
-     * except on the one control the user presses repeatedly. Clicking "Load
-     * more" triggers a refresh, the refresh re-renders, and the button the
-     * finger or the keyboard was on ceases to exist. So note the intent and
-     * restore it.
+     * and wrong for the buttons the user presses repeatedly: clicking Next or
+     * Load more triggers a refresh, the refresh re-renders, and the button the
+     * finger or the keyboard was on ceases to exist.
      */
-    private restoreFocusToLoadMore = false;
+    private restoreFocus: 'previous' | 'next' | 'loadMore' | null = null;
 
     public init(
         _context: ComponentFramework.Context<IInputs>,
@@ -181,20 +181,73 @@ export class CompactList implements ComponentFramework.StandardControl<IInputs, 
 
         // `loading` is true on the first updateView, before any records arrive,
         // so rendering the empty state here flashes "No records" on every load.
-        const ids = dataset.sortedRecordIds ?? [];
+        const all = dataset.sortedRecordIds ?? [];
 
-        if (ids.length === 0) {
+        if (all.length === 0) {
             this.message(dataset.loading ? getString('CompactList_Loading') : getString('CompactList_Empty'));
             return;
         }
 
+        const ids = this.pagingMode(context) === 'loadMore' ? all : this.currentPage(all);
+
         this.container.appendChild(this.list(context, dataset, columns, ids, getString));
         this.container.appendChild(this.footer(context, dataset, ids.length, getString));
 
-        if (this.restoreFocusToLoadMore) {
-            this.restoreFocusToLoadMore = false;
-            this.container.querySelector<HTMLButtonElement>('.CompactList-loadMore')?.focus();
+        // The button that caused this render no longer exists. Put focus on its
+        // replacement, and when that replacement is disabled — the last page,
+        // or the end of a load-more list — fall back to the pager's other
+        // button rather than stranding the keyboard at <body>.
+        if (this.restoreFocus) {
+            const wanted = this.restoreFocus;
+            this.restoreFocus = null;
+
+            const button = this.container.querySelector<HTMLButtonElement>(`.CompactList-${wanted}`);
+            const fallback =
+                wanted === 'next'
+                    ? this.container.querySelector<HTMLButtonElement>('.CompactList-previous')
+                    : wanted === 'previous'
+                      ? this.container.querySelector<HTMLButtonElement>('.CompactList-next')
+                      : null;
+
+            (button && !button.disabled ? button : fallback)?.focus();
         }
+    }
+
+    /**
+     * The records belonging to the page the pager says it is on.
+     *
+     * **This is the one place the control slices `sortedRecordIds`, and the
+     * general rule is never to do it.** On a platform that honours
+     * `loadOnlyNewPage`, that array already *is* the current page, and slicing
+     * it hides records the platform paged for.
+     *
+     * Observed on a real model-driven form, 2026-08-21: it does not honour it.
+     * `loadNextPage(true)` from page 1 of a 6-record view at page size 3 came
+     * back with all six ids, so the second page rendered under the first. The
+     * flag is documented, typed and ignored. `pcf-data-table` and the template
+     * carry the same call and the same assumption.
+     *
+     * So the slice is a repair for one specific platform behaviour, and it is
+     * written to disappear the moment that behaviour changes: when the array is
+     * no longer than a page it is already the page, and nothing is cut.
+     *
+     * Slicing by page index rather than taking the tail is what makes it work
+     * going backwards as well as forwards — the accumulated array is pages
+     * 1..N in order, so page 2 is at offset `pageSize`, whichever page was
+     * asked for last.
+     */
+    private currentPage(ids: string[]): string[] {
+        if (ids.length <= this.appliedPageSize) {
+            return ids;
+        }
+
+        const start = (this.page - 1) * this.appliedPageSize;
+        const slice = ids.slice(start, start + this.appliedPageSize);
+
+        // A platform that accumulates differently — or a page counter that has
+        // drifted — must not empty the list. Showing the wrong page is
+        // recoverable by clicking; showing nothing looks like data loss.
+        return slice.length > 0 ? slice : ids.slice(-this.appliedPageSize);
     }
 
     private message(text: string, isError = false): void {
@@ -399,7 +452,7 @@ export class CompactList implements ComponentFramework.StandardControl<IInputs, 
                 }
 
                 // The re-render this causes destroys this very button.
-                this.restoreFocusToLoadMore = true;
+                this.restoreFocus = 'loadMore';
                 dataset.paging.loadNextPage();
             });
 
@@ -413,17 +466,30 @@ export class CompactList implements ComponentFramework.StandardControl<IInputs, 
         const wrap = document.createElement('div');
         wrap.className = 'CompactList-footer CompactList-pager';
 
+        /*
+         * `hasPreviousPage` is **not** the question "is there a page before
+         * this one".
+         *
+         * Observed on a real form: after paging forward to page 2 it was still
+         * false, and Previous stayed disabled with no way back. That is
+         * consistent with the platform treating the load as the *range* pages
+         * 1..2 rather than as page 2 — the range does begin at page 1, so by
+         * its own reckoning there is nothing before it, and the answer is
+         * truthful to a question this pager is not asking.
+         *
+         * The control's own counter is the one thing that does answer it.
+         */
         const previous = document.createElement('button');
         previous.type = 'button';
+        previous.className = 'CompactList-previous';
         previous.textContent = getString('CompactList_Previous');
-        previous.disabled = !dataset.paging.hasPreviousPage;
+        previous.disabled = this.page <= 1;
         previous.addEventListener('click', () => {
-            if (!dataset.paging.hasPreviousPage) {
+            if (this.page <= 1) {
                 return;
             }
 
-            this.page = Math.max(1, this.page - 1);
-            dataset.paging.loadPreviousPage(true);
+            this.goToPage(dataset, this.page - 1);
         });
 
         const status = document.createElement('span');
@@ -431,8 +497,12 @@ export class CompactList implements ComponentFramework.StandardControl<IInputs, 
         status.setAttribute('aria-live', 'polite');
         status.textContent = this.pagerLabel(dataset, rowsOnPage, getString);
 
+        // `hasNextPage` has behaved, so it is still the guard for going
+        // forward. It is also the only signal for "is there more", which a
+        // local counter cannot supply.
         const next = document.createElement('button');
         next.type = 'button';
+        next.className = 'CompactList-next';
         next.textContent = getString('CompactList_Next');
         next.disabled = !dataset.paging.hasNextPage;
         next.addEventListener('click', () => {
@@ -440,13 +510,7 @@ export class CompactList implements ComponentFramework.StandardControl<IInputs, 
                 return;
             }
 
-            this.page += 1;
-
-            // `true` is what makes this a pager. Without it the platform
-            // returns the whole page range and the list grows instead of
-            // turning — which is the other mode, reached by a property rather
-            // than by forgetting an argument.
-            dataset.paging.loadNextPage(true);
+            this.goToPage(dataset, this.page + 1);
         });
 
         wrap.append(previous, status, next);
@@ -455,24 +519,70 @@ export class CompactList implements ComponentFramework.StandardControl<IInputs, 
     }
 
     /**
+     * Turn to an absolute page.
+     *
+     * `loadExactPage` is preferred because it says what this pager means, and
+     * because it is the documented fallback for a platform that ignores
+     * `loadOnlyNewPage` — which this one does. It is typed as required rather
+     * than optional, but it is still feature-detected: a required member of an
+     * interface is a claim about the type definitions, not about the host, and
+     * this whole method exists because one of those claims turned out to be
+     * worth less than it looked.
+     *
+     * Either way `currentPage()` decides what is rendered, so the pager turns
+     * whether or not the call underneath it honours the request.
+     */
+    private goToPage(dataset: DataSet, target: number): void {
+        const back = target < this.page;
+
+        this.page = Math.max(1, target);
+        this.restoreFocus = back ? 'previous' : 'next';
+
+        const paging = dataset.paging;
+
+        if (typeof paging.loadExactPage === 'function') {
+            paging.loadExactPage(this.page);
+            return;
+        }
+
+        if (back) {
+            paging.loadPreviousPage(true);
+        } else {
+            paging.loadNextPage(true);
+        }
+    }
+
+    /**
      * `totalResultCount` is -1 when the platform did not count the rows, which
      * is common on large views. Printing "of -1" is the tell that nobody
      * checked, so name the page instead of the range.
+     *
+     * The page number is the control's own counter. `firstPageNumber` used to
+     * be preferred over it and produced **"4–9 of 6"** on a real form: it
+     * reported 2 while `sortedRecordIds` held both pages, so a start taken from
+     * the platform was combined with a row count taken from an accumulated
+     * array, and the range ran past its own total. Two sources, one sentence.
+     *
+     * `rowsOnPage` is now the length of what was actually rendered, so the two
+     * halves cannot disagree again.
      */
     private pagerLabel(dataset: DataSet, rowsOnPage: number, getString: (id: string) => string): string {
         const total = dataset.paging.totalResultCount;
-        const first = dataset.paging.firstPageNumber;
-        const page = typeof first === 'number' && first >= 1 ? first : this.page;
 
         if (total < 0) {
-            return getString('CompactList_PageStatus').replace('{0}', String(page));
+            return getString('CompactList_PageStatus').replace('{0}', String(this.page));
         }
 
-        const start = (page - 1) * this.appliedPageSize + 1;
+        const start = (this.page - 1) * this.appliedPageSize + 1;
+
+        // A page counter that has run past the end — a view that shrank under
+        // the control, a refresh that reset the platform's paging but not
+        // this — would otherwise print a range beyond the total.
+        const end = Math.min(start + rowsOnPage - 1, total);
 
         return getString('CompactList_RangeStatus')
-            .replace('{0}', String(start))
-            .replace('{1}', String(start + rowsOnPage - 1))
+            .replace('{0}', String(Math.min(start, total)))
+            .replace('{1}', String(end))
             .replace('{2}', String(total));
     }
 

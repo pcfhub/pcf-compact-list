@@ -45,12 +45,18 @@ one fewer line. A table has to hold the cell open because the column is still
 there; a list has no grid to hold open, and a run of empty lines is exactly what
 separates this from a table with its headers switched off.
 
-**The two paging modes are one platform call with different arguments.**
-`loadNextPage(true)` turns the page. Bare `loadNextPage()` returns the whole page
-range, so `sortedRecordIds` accumulates and the list grows — which is documented
-elsewhere as the trap a table falls into, and is precisely what a list wants.
-See `SPEC.md`; the accumulate path is reasoned from the type definitions and has
-not been observed against a real view.
+**The pager does not trust the platform's paging state, and that is not
+paranoia.** `loadNextPage(true)` is supposed to return only the new page.
+Observed on a real form it returns the whole range, so page 2 rendered under
+page 1; `hasPreviousPage` stayed false so Previous never unlocked; and
+`firstPageNumber` disagreed with the ids badly enough to print "4–9 of 6".
+
+So the page number is the control's own counter, Previous is enabled from it
+rather than from `hasPreviousPage`, `loadExactPage` is preferred where the host
+has it, and the pager slices `sortedRecordIds` to the current page — guarded so
+that it does nothing on a platform that behaves. Load-more mode is untouched,
+because there the accumulation is the feature. `SPEC.md` has the measurements
+and the test that reproduces the original bug.
 
 **Standard, not React.** No React, no Fluent, no `<platform-library>` entries —
 one file of DOM. See the bundle numbers in `SPEC.md`, which are less lopsided

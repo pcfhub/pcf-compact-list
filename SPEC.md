@@ -194,23 +194,77 @@ formatting currency and dates itself. Skipping on the empty formatted string is
 the right trade for a list and is the behaviour documented in
 `docs/limitations.md`, not an accident.
 
+## `loadOnlyNewPage` is ignored, and two other things follow from it
+
+**Observed on a real model-driven form, 2026-08-21.** This is the one section
+here that comes from the platform rather than from a build, and it contradicts
+what the type definitions say.
+
+The report was a screenshot: a 6-record Accounts view at page size 3, after one
+click of **Next**. All six records on screen, one page under the other. The
+status read **"4–9 of 6"**. Previous was disabled and stayed disabled.
+
+Three distinct faults, one cause:
+
+1. **`loadNextPage(true)` accumulated.** `sortedRecordIds` came back holding
+   pages 1..2. The `loadOnlyNewPage` argument is documented, typed, passed —
+   and ignored. Everything written about this call in this repository, in
+   `pcf-data-table` and in the template assumed the opposite.
+2. **`hasPreviousPage` stayed false on page 2**, so Previous never unlocked and
+   there was no way back. That is not a second bug so much as the platform being
+   truthful about a different question: it considers the load to be the *range*
+   pages 1..2, and a range beginning at page 1 has nothing before it.
+3. **`firstPageNumber` reported 2 while the ids held both pages**, and the label
+   combined a start taken from the platform with a row count taken from the
+   accumulated array. Hence a range running past its own total.
+
+### What the fix does
+
+- **Page number is the control's own counter.** `firstPageNumber` is no longer
+  read at all, and Previous is enabled from `this.page > 1` rather than from
+  `hasPreviousPage`. `hasNextPage` is kept — it has behaved, and it is the only
+  available answer to "is there more".
+- **`loadExactPage(n)` when the host has it**, falling back to
+  `loadNextPage(true)` / `loadPreviousPage(true)`. It is typed as required, and
+  feature-detected anyway: a required member is a claim about the type
+  definitions, not about the host, which is the whole lesson of this section.
+- **The pager slices `sortedRecordIds` to the current page**, which the general
+  rule says never to do. The rule assumes the flag is honoured, and it is not.
+  The slice is guarded on `ids.length > pageSize`, so it does nothing on a
+  platform that behaves — the repair removes itself rather than needing to be
+  removed. It slices by page offset rather than taking the tail, so it is
+  correct going backwards too. Load-more mode is untouched: there, accumulation
+  is the point.
+
+### How it was checked
+
+Neither harness can page — `pcf-start` and the hub's demo harness both report a
+single page — so the control was compiled to CommonJS with `tsc` and driven
+under jsdom against a fake dataset reproducing the platform's behaviour: 6
+records, page size 3, `loadNextPage` ignoring its argument, `hasPreviousPage`
+pinned false, `firstPageNumber` reporting the loaded page count.
+
+Run against the **pre-fix** commit it reproduces the screenshot exactly — six
+rows, `"4–9 of 6"`, Previous disabled — and 6 of 13 assertions fail. Against the
+fix, 13 of 13 pass. The same driver also runs a dataset that *honours* the flag,
+and the fix passes there too, which is the check that matters: it is a repair
+for a misbehaving host, not a control that now requires one.
+
+The driver is scratch, not committed. It is worth rebuilding rather than
+trusting this paragraph if the paging code changes again.
+
 ## Still open
 
-- **The accumulate path has never been observed.** Bare `loadNextPage()`
-  accumulating pages 1..N is read from the type definition's own comment
-  ("Returns results for the whole page range") and repeated in
-  `pcf-data-table/SPEC.md`, which also never ran it. Neither harness can settle
-  it: `pcf-start` reports `hasNextPage: false` against its own three records, so
-  the button never appears, and the hub's demo harness serves the fixture as a
-  single page for the same reason. Until someone points this at a view with more
-  than one page, `paging: "loadMore"` is **unverified at runtime**. If a platform
-  build ignores the argument in the other direction, the pager degrades into
-  load-more rather than breaking.
-- **The focus restore after Load more is unverified for the same reason.** The
-  flag and the `.focus()` are exercised by no test, because the button they
-  belong to cannot be clicked in either harness.
-- **`firstPageNumber`** is used for the pager label with a local counter as
-  fallback, on the same unverified basis as everywhere else it is used.
+- **The load-more append is still unobserved.** The pager is now settled (see
+  above), but nobody has clicked **Load more** on a real view. Bare
+  `loadNextPage()` should accumulate — the platform accumulates even when told
+  not to, so the mode that *wants* accumulation is the one least likely to be
+  broken — but "should" is doing work in that sentence.
+- **`loadExactPage` has not been exercised.** The form that produced the bug
+  report has not been retested since the fix, so the branch that actually ran
+  there is unknown: if `loadExactPage` exists on that host it was used, and if
+  it does not the `loadNextPage(true)` + slice path was. Both are covered by the
+  driver, neither by the platform.
 - **No screenshot, no logo.** `media/logo.png` is the template placeholder and
   `media/screenshots` is empty, so `docs/` references no images at all. Nothing
   in CI checks either.
