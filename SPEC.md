@@ -128,13 +128,31 @@ template and then building a list means deleting most of `index.ts`, which is
 fine, but the shipped file is closer to `pcf-data-table` than a reader of
 `TEMPLATE.md` would guess.
 
-**`demo/` is excluded from the pack.** The zip contains eight files — manifest,
-bundle, licence, CSS, resx, and the three solution XMLs — and no fixture.
-`pcf-data-table`'s SPEC recorded that the template shipped no
-`<ExcludeDirectories Include="…\demo\**" />` and that the line had been added by
-hand there; the template carries it now, and this is the first repository to
-inherit it rather than patch it in. (`pcf-tag-list` still lacks the line and
-still packs its fixture.)
+**The `demo/**` exclude in the `.pcfproj` does nothing, and the belief that it
+matters is wrong.** The zip contains eight files — manifest, bundle, licence,
+CSS, resx, and the three solution XMLs — and no fixture. It is tempting to read
+that as the `<ExcludeDirectories Include="…\demo\**" />` line working, and this
+SPEC said exactly that in its first draft. Two packs settle it:
+
+| Pack | `demo/` in the zip? |
+| --- | --- |
+| This control, **with** the line | No — 8 files |
+| This control, **line deleted** | No — 8 files |
+| `pcf-tag-list`, which never had the line | No — 12 files, no `demo/tags.json` |
+
+The solution pack takes `out/controls/<Control>/**` and the solution XMLs. It
+never considers loose project files, so there is nothing for the exclude to
+exclude. The `<None Include>`/`ExcludeDirectories` pair shapes the msbuild
+*project*'s item list, which is not what gets packaged.
+
+The claim originated in `pcf-data-table/SPEC.md` — "confirms the
+`<ExcludeDirectories>` line added to `DataTable.pcfproj`" — and it is an
+attribution to a cause that was never tested against its absence. The template's
+comment on the line ("a fixture packed into the solution is dead weight shipped
+to every customer") says the same thing and is also wrong. Both have been
+corrected. The line is harmless and kept for uniformity across the repositories,
+but it is not load-bearing and a repository missing it is not shipping anything
+extra.
 
 ## Platform behaviour worth knowing
 
