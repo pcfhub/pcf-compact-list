@@ -1,6 +1,6 @@
 {
   "name": "pcf-compact-list",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "A Dataverse view as a stacked list of records, for narrow spaces.",
   "license": "MIT",
   "private": true,

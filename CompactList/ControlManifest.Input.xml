@@ -7,7 +7,7 @@
   -->
   <control namespace="PCFHub"
            constructor="CompactList"
-           version="0.1.1"
+           version="0.1.2"
            display-name-key="CompactList_Name"
            description-key="CompactList_Desc"
            control-type="standard">
