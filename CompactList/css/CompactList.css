@@ -172,6 +172,9 @@ button.CompactList-title:hover {
 }
 
 .CompactList-footer button {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacingHorizontalXS, 4px);
     font: inherit;
     padding: var(--spacingVerticalXS, 4px) var(--spacingHorizontalM, 12px);
     color: var(--colorNeutralForeground1, #242424);
@@ -179,6 +182,35 @@ button.CompactList-title:hover {
     border: 1px solid var(--colorNeutralStroke1, #d1d1d1);
     border-radius: var(--borderRadiusMedium, 4px);
     cursor: pointer;
+}
+
+/*
+  The pager chevrons.
+
+  Inline `<svg>`, and they inherit the button’s `color`. An icon behind
+  `<img src>` renders in an isolated document that cannot read this stylesheet,
+  so it could not follow a dark theme.
+
+  `flex: none` so a chevron never squashes on a narrow form — the label is what
+  should give way instead.
+*/
+.CompactList-chevron {
+    flex: 0 0 auto;
+    width: 16px;
+    height: 16px;
+}
+
+/*
+  Mirrored in right-to-left. A chevron is directional, and reordering the flex
+  children does not turn the glyph around: `<` stays `<` and ends up pointing at
+  the label instead of away from it.
+
+  Keyed off any right-to-left ancestor rather than this control’s own `dir`,
+  which it does not set — in an right-to-left app the host form is what carries
+  it.
+*/
+[dir="rtl"] .CompactList-chevron {
+    transform: scaleX(-1);
 }
 
 .CompactList-footer button:hover:not(:disabled) {

@@ -188,6 +188,51 @@ check('page two replaces page one rather than stacking under it', second.all('.C
  * quirk rather than a fixture convenience — so a Previous button driven off it
  * never appears, and the control has to track the page itself.
  */
+/*
+ * **The pager chevrons are inline `<svg>`, and that is a theming decision.**
+ *
+ * The same glyph behind an `<img src>` — a resource, a data URL, PNG or SVG
+ * alike — renders in an isolated document that cannot see this control’s
+ * stylesheet, so its `currentColor` resolves to black and a dark form gets a
+ * black chevron on a dark background. `pcf-file-drop` shipped exactly that and
+ * it was found on a real form, not in review.
+ *
+ * This control has no `dev/harness.html` — it predates the every-shape rig — so
+ * this assertion is the only thing standing between that regression and a
+ * customer.
+ */
+for (const [what, selector] of [['previous', '.CompactList-previous'], ['next', '.CompactList-next']]) {
+    // A tag selector scoped to the button: `dev/dom.js` supports 'tag',
+    // '.class' and 'tag.class', and throws by name on anything else.
+    const button = second.find(selector);
+    const glyph = button && button.querySelector('svg');
+
+    check(
+        `the ${what} button carries an inline svg chevron, not an image`,
+        glyph !== null && glyph.tagName.toLowerCase() === 'svg',
+        glyph ? glyph.tagName : 'no svg found',
+    );
+
+    check(
+        `and strokes it with currentColor, so the button’s colour decides the ${what} chevron`,
+        glyph !== null && glyph.querySelector('path').getAttribute('stroke') === 'currentColor',
+    );
+
+    /* Decorative: the button already says “Previous page”. */
+    check(
+        `and hides the ${what} chevron from the accessibility tree`,
+        glyph !== null && glyph.getAttribute('aria-hidden') === 'true',
+    );
+}
+
+/* The label is still there — the chevron was added beside it, not instead of
+   it, so the accessible name is unchanged. */
+check(
+    'and still says what it does in words',
+    second.find('.CompactList-previous').textContent.includes('resx:CompactList_Previous'),
+    second.find('.CompactList-previous').textContent,
+);
+
 check(
     'knows it is on page two even though the platform reports no previous page',
     second.find('.CompactList-previous') !== null && second.find('.CompactList-previous').hidden !== true,

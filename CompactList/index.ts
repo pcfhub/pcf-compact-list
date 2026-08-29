@@ -482,7 +482,9 @@ export class CompactList implements ComponentFramework.StandardControl<IInputs, 
         const previous = document.createElement('button');
         previous.type = 'button';
         previous.className = 'CompactList-previous';
-        previous.textContent = getString('CompactList_Previous');
+        // Chevron then label. Decoration on a button that already says what it
+        // does, so the accessible name is unchanged.
+        previous.append(chevron(CHEVRON_PREVIOUS), document.createTextNode(getString('CompactList_Previous')));
         previous.disabled = this.page <= 1;
         previous.addEventListener('click', () => {
             if (this.page <= 1) {
@@ -503,7 +505,9 @@ export class CompactList implements ComponentFramework.StandardControl<IInputs, 
         const next = document.createElement('button');
         next.type = 'button';
         next.className = 'CompactList-next';
-        next.textContent = getString('CompactList_Next');
+        // Label then chevron: the glyph points the way the button goes, so it
+        // trails rather than leads.
+        next.append(document.createTextNode(getString('CompactList_Next')), chevron(CHEVRON_NEXT));
         next.disabled = !dataset.paging.hasNextPage;
         next.addEventListener('click', () => {
             if (!dataset.paging.hasNextPage) {
@@ -604,6 +608,50 @@ export class CompactList implements ComponentFramework.StandardControl<IInputs, 
         this.notifyOutputChanged();
         dataset.openDatasetItem(record.getNamedReference());
     }
+}
+
+/** The SVG namespace. `createElement('svg')` makes an *HTML* element of that
+ *  name: it parses, it appends, it occupies no space and draws nothing. */
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+/** The pager chevrons, on a 20×20 grid. Two strokes each. */
+const CHEVRON_PREVIOUS = 'M12.5 5 7.5 10l5 5';
+const CHEVRON_NEXT = 'M7.5 5l5 5-5 5';
+
+/**
+ * A chevron, inline, so it can follow the theme.
+ *
+ * An icon behind `<img src>` — file or data URL, PNG or SVG — renders as an
+ * isolated document that cannot see this control's stylesheet, so a
+ * `currentColor` inside it resolves to black and a dark form gets a black glyph
+ * on a dark background. `pcf-file-drop` shipped exactly that and it was found on
+ * a real form. Inline, `currentColor` is the button's own colour.
+ *
+ * Decorative: it sits on a button that already says “Previous page”, so
+ * announcing the glyph as well would add a word and no meaning.
+ */
+function chevron(d: string): SVGSVGElement {
+    const svg = document.createElementNS(SVG_NS, 'svg') as SVGSVGElement;
+
+    // `classList`, because `className` on an SVG element is a read-only
+    // `SVGAnimatedString` and assigning to it silently does nothing.
+    svg.classList.add('CompactList-chevron');
+    svg.setAttribute('viewBox', '0 0 20 20');
+    svg.setAttribute('aria-hidden', 'true');
+    svg.setAttribute('focusable', 'false');
+
+    const path = document.createElementNS(SVG_NS, 'path');
+
+    path.setAttribute('d', d);
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke', 'currentColor');
+    path.setAttribute('stroke-width', '1.5');
+    path.setAttribute('stroke-linecap', 'round');
+    path.setAttribute('stroke-linejoin', 'round');
+
+    svg.appendChild(path);
+
+    return svg;
 }
 
 function clamp(value: number, low: number, high: number): number {
