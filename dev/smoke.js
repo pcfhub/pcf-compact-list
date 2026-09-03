@@ -168,6 +168,38 @@ check(
     plain.calls().join(' '),
 );
 
+/*
+ * And the other half, which is the one that was missing.
+ *
+ * `pageSize` carried `default-value="25"`, so *every* install looked like the
+ * bind above — a maker who never touched the property still produced a control
+ * that replaced the user's own *Rows per page*. The property has no default
+ * now, so leaving it alone is a state the control can see, and the assertion
+ * is about a call that must not happen. `pcf-row-commands` shipped the override
+ * and had to be released twice to take it back out.
+ */
+const untouched = bind({ inputs: { pageSize: null, paging: 'pager', titleColumn: null, detailColumns: 3, showLabels: true } });
+
+check(
+    'an unset page size overrides nothing — the host is already paging',
+    untouched.calls().filter((call) => call.startsWith('setPageSize')).length === 0,
+    untouched.calls().join(' '),
+);
+
+/*
+ * A main grid answers the width and never the height — `-1` for the life of the
+ * control, however politely it asks. A control that waits for a positive number
+ * waits forever, which is how `pcf-row-commands` ran its rows off the bottom of
+ * a page and took the pager with them.
+ */
+const unmeasured = bind({ width: 900, quirks: { heightUnmeasured: true } });
+
+check(
+    'renders on a host that measures a width and never a height',
+    unmeasured.handle.context.mode.allocatedHeight === -1 && !unmeasured.driven.looping,
+    `allocatedHeight ${unmeasured.handle.context.mode.allocatedHeight}`,
+);
+
 /* ---------------------------------------------------------------- paging */
 
 /*
