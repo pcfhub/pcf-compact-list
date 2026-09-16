@@ -68,6 +68,34 @@ With **Open on click** off, the titles are plain text and the control writes
 nothing. Turn it back on and handle `OnChange` if you want the navigation —
 see [Canvas apps](canvas.md) for the formula.
 
+## Finding a contact on a large table
+
+The goal: a contacts subgrid over 40,000 records where people search by name or
+email, and the search has to come back quickly.
+
+| Property | Value |
+| --- | --- |
+| Show search | Yes |
+| Search columns | `fullname, emailaddress1` |
+| Match | `startsWith` |
+| Minimum characters | `3` |
+| Typing pause (ms) | `400` |
+| Detail lines | `2` |
+| Density | `compact` |
+
+Three deliberate choices, all about the size of the table:
+
+- **Two named columns, not every text column.** Empty would search the
+  description as well, which is a memo and has no index behind it.
+- **Three characters, not two.** At two, `ab%` across 40,000 contacts returns
+  thousands of rows nobody wanted.
+- **A longer pause.** 400ms rather than 300 costs nothing a typist notices and
+  removes a query per word.
+
+The search is server-side, so the results cover the whole table rather than the
+page that happened to be loaded — see [Limitations](limitations.md) for what
+that costs on `Contains`.
+
 :::callout{type=success}
 Every property above is optional. Placing the control with nothing configured
 gives you the first example's shape against whatever view the subgrid is

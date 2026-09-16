@@ -1,12 +1,18 @@
 {
   "schemaVersion": 1,
-
   "slug": "pcf-compact-list",
   "name": "Compact List",
   "tagline": "A Dataverse view as a stacked list of records, for narrow spaces.",
   "category": "data",
-  "tags": ["dataset", "list", "compact", "canvas", "no-react"],
-
+  "tags": [
+    "dataset",
+    "list",
+    "compact",
+    "search",
+    "filter",
+    "canvas",
+    "no-react"
+  ],
   "control": {
     "namespace": "PCFHub",
     "constructor": "CompactList",
@@ -14,28 +20,29 @@
     "framework": "standard",
     "manifestPath": "CompactList/ControlManifest.Input.xml"
   },
-
   "links": {
     "homepage": "https://github.com/pcfhub/pcf-compact-list",
     "support": "https://github.com/pcfhub/pcf-compact-list/issues",
     "license": "MIT"
   },
-
   "docs": {
     "path": "docs"
   },
-
   "media": {
     "logo": "media/logo.png",
-    "screenshots": ["media/screenshot.png"]
+    "screenshots": [
+      "media/screenshot.png"
+    ]
   },
-
   "demo": {
     "fidelity": "limited",
     "bundle": "out/controls/CompactList/bundle.js",
-    "styles": ["out/controls/CompactList/css/CompactList.css"],
+    "styles": [
+      "out/controls/CompactList/css/CompactList.css"
+    ],
     "datasetFixture": "demo/records.json",
     "limitations": [
+      "Searching narrows nothing here. Filtering is server-side: with Show search on, the control calls dataset.filtering.setFilter() and then refresh(), which on a real view sends the query and returns a different set of records. The demo harness has no server behind it — it accepts the filter request and renders the same rows. Everything the control does up to that point is real and visible in the call log: the debounce, the expression it builds, the paging reset. The filtered record count output therefore never changes either.",
       "Paging is inert. The harness puts every fixture record on a single page and reports hasNextPage and hasPreviousPage as false, so Previous and Next render disabled and the Load more button does not appear at all. The page size property does nothing either, because the harness's setPageSize() is an empty function.",
       "Because Load more never appears, the demo cannot show the difference between the two paging modes. Switching the Paging preset changes the footer the control would render on a real view, not what the harness can exercise.",
       "Clicking an item calls dataset.openDatasetItem(), which the harness logs as a mock call: there is no Dataverse behind this origin and no form to open. The openedRecordId output still updates, so the value a canvas app would react to is visible."
@@ -51,7 +58,12 @@
           "detailColumns": 3,
           "showLabels": true,
           "density": "comfortable",
-          "openOnItemClick": true
+          "openOnItemClick": true,
+          "showSearch": false,
+          "searchColumns": "",
+          "matchMode": "startsWith",
+          "minimumCharacters": 2,
+          "debounceMs": 300
         },
         "isDefault": true
       },
@@ -65,7 +77,30 @@
           "detailColumns": 2,
           "showLabels": false,
           "density": "compact",
-          "openOnItemClick": true
+          "openOnItemClick": true,
+          "showSearch": false,
+          "searchColumns": "",
+          "matchMode": "startsWith",
+          "minimumCharacters": 2,
+          "debounceMs": 300
+        }
+      },
+      {
+        "slug": "search",
+        "name": "With a search box",
+        "description": "Show search on, matching anywhere in the account name. Type and watch the call log below: the expression, the paging reset and the refresh are all real, and only the server behind them is missing.",
+        "props": {
+          "pageSize": 25,
+          "paging": "pager",
+          "detailColumns": 2,
+          "showLabels": true,
+          "density": "comfortable",
+          "openOnItemClick": true,
+          "showSearch": true,
+          "searchColumns": "name",
+          "matchMode": "contains",
+          "minimumCharacters": 2,
+          "debounceMs": 300
         }
       }
     ]

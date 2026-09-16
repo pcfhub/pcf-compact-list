@@ -42,12 +42,61 @@ box.
 `Paging` and `Density` take the string values above. Typing anything else falls
 back to the default rather than erroring.
 
-## Reading the output
+## Adding a search box
 
-The control writes `OpenedRecordId` — the id of the item whose title was last
-clicked — and it writes it **before** it tries to open anything. That ordering
-is what makes the control usable here at all: canvas has no form to navigate to,
-so `openDatasetItem()` does nothing, and the output is the whole mechanism.
+Set **Show search** to `true` and the search properties come into play:
+
+| Property | Value |
+| --- | --- |
+| Show search | `true` |
+| Search columns | `"name, accountnumber"` |
+| Match | `"startsWith"` |
+| Minimum characters | `2` |
+| Typing pause (ms) | `300` |
+
+:::callout{type=info}
+Pick the fields in the **Fields** flyout deliberately. With **Search columns**
+empty, the control searches every text column *that `Items` supplies* — and in
+canvas that is exactly the set you picked there.
+:::
+
+The filter is applied through the dataset, so `Items` has to be something the
+platform can re-query: a delegable expression over a Dataverse table. A
+collection or a materialised table accepts the filter and returns the same rows.
+
+## Reading the outputs
+
+Three. The control writes `OpenedRecordId` — the id of the item whose title was
+last clicked — and it writes it **before** it tries to open anything. That
+ordering is what makes the control usable here at all: canvas has no form to
+navigate to, so `openDatasetItem()` does nothing, and the output is the whole
+mechanism.
+
+With search on, `FilteredRecordCount` and `SearchTerm` let the app say "no
+results" in its own words:
+
+```powerfx
+// A label under the list
+If(
+    CompactList1.FilteredRecordCount = 0,
+    "Nothing matches " & CompactList1.SearchTerm,
+    CompactList1.FilteredRecordCount & " results"
+)
+```
+
+`FilteredRecordCount` is the server's count of what matched, not the number of
+rows on the current page. **It is `-1` on a view the platform did not count**,
+which is common on large tables — and it travels as `-1` rather than as `0`
+precisely so a formula can tell "none" from "unknown":
+
+```powerfx
+Switch(
+    true,
+    CompactList1.FilteredRecordCount < 0, "Showing results",
+    CompactList1.FilteredRecordCount = 0, "No results",
+    CompactList1.FilteredRecordCount & " results"
+)
+```
 
 Do the navigation yourself in `OnChange`:
 

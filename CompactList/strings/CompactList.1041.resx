@@ -70,174 +70,174 @@
 
 
   <data name="CompactList_Name" xml:space="preserve">
-    <value>Compact List</value>
+    <value>コンパクト リスト</value>
   </data>
   <data name="CompactList_Desc" xml:space="preserve">
-    <value>A Dataverse view as a stacked list of records, for narrow spaces.</value>
+    <value>Dataverse のビューを縦に積んだレコード一覧として表示します。幅の狭い場所向けです。</value>
   </data>
   <data name="Records_DataSet_Name" xml:space="preserve">
-    <value>Records</value>
+    <value>レコード</value>
   </data>
   <data name="PageSize_Name" xml:space="preserve">
-    <value>Page size</value>
+    <value>ページ サイズ</value>
   </data>
   <data name="PageSize_Desc" xml:space="preserve">
-    <value>How many records to request per page. The platform may clamp large values.</value>
+    <value>1 ページあたりに要求するレコード数。プラットフォームが大きな値を制限する場合があります。</value>
   </data>
   <data name="Paging_Name" xml:space="preserve">
-    <value>Paging</value>
+    <value>ページ送り</value>
   </data>
   <data name="Paging_Desc" xml:space="preserve">
-    <value>Whether further pages replace the list or are appended to it.</value>
+    <value>次のページで一覧を置き換えるか、末尾に追加するか。</value>
   </data>
   <data name="Paging_Pager_Name" xml:space="preserve">
-    <value>Pager (previous and next)</value>
+    <value>ページャー (前へ / 次へ)</value>
   </data>
   <data name="Paging_LoadMore_Name" xml:space="preserve">
-    <value>Load more (append)</value>
+    <value>さらに読み込む (追加)</value>
   </data>
   <data name="TitleColumn_Name" xml:space="preserve">
-    <value>Title column</value>
+    <value>タイトル列</value>
   </data>
   <data name="TitleColumn_Desc" xml:space="preserve">
-    <value>Logical name of the column to use as each item's title. Leave empty to use the view's primary column.</value>
+    <value>各項目のタイトルに使う列の論理名。空の場合はビューの主要な列を使います。</value>
   </data>
   <data name="DetailColumns_Name" xml:space="preserve">
-    <value>Detail lines</value>
+    <value>詳細行</value>
   </data>
   <data name="DetailColumns_Desc" xml:space="preserve">
-    <value>How many further columns to show beneath the title. Zero shows the title alone.</value>
+    <value>タイトルの下に表示する列数。0 でタイトルのみ表示します。</value>
   </data>
   <data name="ShowLabels_Name" xml:space="preserve">
-    <value>Show labels</value>
+    <value>ラベルを表示</value>
   </data>
   <data name="ShowLabels_Desc" xml:space="preserve">
-    <value>Prefix each detail line with its column name.</value>
+    <value>各詳細行の前に列名を表示します。</value>
   </data>
   <data name="Density_Name" xml:space="preserve">
-    <value>Density</value>
+    <value>密度</value>
   </data>
   <data name="Density_Desc" xml:space="preserve">
-    <value>How much space each item takes.</value>
+    <value>各項目が占める高さ。</value>
   </data>
   <data name="Density_Comfortable_Name" xml:space="preserve">
-    <value>Comfortable</value>
+    <value>ゆったり</value>
   </data>
   <data name="Density_Compact_Name" xml:space="preserve">
-    <value>Compact</value>
+    <value>コンパクト</value>
   </data>
   <data name="OpenOnItemClick_Name" xml:space="preserve">
-    <value>Open on click</value>
+    <value>クリックで開く</value>
   </data>
   <data name="OpenOnItemClick_Desc" xml:space="preserve">
-    <value>Make each item's title a button that opens the record. Turn off for a read-only list.</value>
+    <value>各項目のタイトルをレコードを開くボタンにします。読み取り専用の一覧ではオフにします。</value>
   </data>
   <data name="ShowSearch_Name" xml:space="preserve">
-    <value>Show search</value>
+    <value>検索を表示</value>
   </data>
   <data name="ShowSearch_Desc" xml:space="preserve">
-    <value>Put a search box above the list that filters the view server-side.</value>
+    <value>一覧の上に、ビューをサーバー側で絞り込む検索ボックスを表示します。</value>
   </data>
   <data name="SearchColumns_Name" xml:space="preserve">
-    <value>Search columns</value>
+    <value>検索する列</value>
   </data>
   <data name="SearchColumns_Desc" xml:space="preserve">
-    <value>Logical names to search, comma-separated. Empty searches every text column in the view.</value>
+    <value>論理名をコンマ区切りで指定します。空の場合はビュー内のすべてのテキスト列を検索します。</value>
   </data>
   <data name="MatchMode_Name" xml:space="preserve">
-    <value>Match</value>
+    <value>一致方法</value>
   </data>
   <data name="MatchMode_Desc" xml:space="preserve">
-    <value>Whether a term matches the start of a value or anywhere inside it.</value>
+    <value>値の先頭に一致するか、値のどこかに一致するか。</value>
   </data>
   <data name="MatchMode_StartsWith" xml:space="preserve">
-    <value>Starts with</value>
+    <value>前方一致</value>
   </data>
   <data name="MatchMode_Contains" xml:space="preserve">
-    <value>Contains</value>
+    <value>部分一致</value>
   </data>
   <data name="MinimumCharacters_Name" xml:space="preserve">
-    <value>Minimum characters</value>
+    <value>最小文字数</value>
   </data>
   <data name="MinimumCharacters_Desc" xml:space="preserve">
-    <value>How much has to be typed before the view is filtered. Below this the filter is cleared.</value>
+    <value>ビューを絞り込むまでに必要な入力文字数。これを下回ると絞り込みは解除されます。</value>
   </data>
   <data name="DebounceMs_Name" xml:space="preserve">
-    <value>Typing pause (ms)</value>
+    <value>入力の待ち時間 (ミリ秒)</value>
   </data>
   <data name="DebounceMs_Desc" xml:space="preserve">
-    <value>How long to wait after the last keystroke before querying the server.</value>
+    <value>最後のキー入力からサーバーに問い合わせるまでの待ち時間。</value>
   </data>
   <data name="OpenedRecordId_Name" xml:space="preserve">
-    <value>Opened record ID</value>
+    <value>開いたレコードの ID</value>
   </data>
   <data name="OpenedRecordId_Desc" xml:space="preserve">
-    <value>The ID of the row most recently opened.</value>
+    <value>最後に開いたレコードの ID。</value>
   </data>
   <data name="FilteredRecordCount_Name" xml:space="preserve">
-    <value>Filtered record count</value>
+    <value>絞り込み後のレコード数</value>
   </data>
   <data name="FilteredRecordCount_Desc" xml:space="preserve">
-    <value>How many records the current search matched, or -1 where the platform did not count them.</value>
+    <value>現在の検索に一致したレコード数。プラットフォームが数えていない場合は -1。</value>
   </data>
   <data name="SearchTerm_Name" xml:space="preserve">
-    <value>Search term</value>
+    <value>検索語</value>
   </data>
   <data name="SearchTerm_Desc" xml:space="preserve">
-    <value>What is currently typed in the search box.</value>
+    <value>現在検索ボックスに入力されている内容。</value>
   </data>
   <data name="CompactList_Loading" xml:space="preserve">
-    <value>Loading records…</value>
+    <value>レコードを読み込んでいます…</value>
   </data>
   <data name="CompactList_Empty" xml:space="preserve">
-    <value>No records.</value>
+    <value>レコードがありません。</value>
   </data>
   <data name="CompactList_NoColumns" xml:space="preserve">
-    <value>No columns are selected for this list.</value>
+    <value>この一覧に列が選択されていません。</value>
   </data>
   <data name="CompactList_Error" xml:space="preserve">
-    <value>This view could not be loaded.</value>
+    <value>このビューを読み込めませんでした。</value>
   </data>
   <data name="CompactList_Previous" xml:space="preserve">
-    <value>Previous page</value>
+    <value>前のページ</value>
   </data>
   <data name="CompactList_Next" xml:space="preserve">
-    <value>Next page</value>
+    <value>次のページ</value>
   </data>
   <data name="CompactList_PageStatus" xml:space="preserve">
-    <value>Page {0}</value>
+    <value>{0} ページ</value>
   </data>
   <data name="CompactList_RangeStatus" xml:space="preserve">
-    <value>{0}–{1} of {2}</value>
+    <value>{2} 件中 {0}–{1} 件</value>
   </data>
   <data name="CompactList_LoadMore" xml:space="preserve">
-    <value>Load more</value>
+    <value>さらに読み込む</value>
   </data>
   <data name="CompactList_LoadedStatus" xml:space="preserve">
-    <value>{0} of {1} shown</value>
+    <value>{1} 件中 {0} 件を表示</value>
   </data>
   <data name="CompactList_LoadedStatusUnknown" xml:space="preserve">
-    <value>{0} shown</value>
+    <value>{0} 件を表示</value>
   </data>
   <data name="CompactList_OpenRecord" xml:space="preserve">
-    <value>Open {0}</value>
+    <value>{0} を開く</value>
   </data>
   <data name="CompactList_Search" xml:space="preserve">
-    <value>Search</value>
+    <value>検索</value>
   </data>
   <data name="CompactList_SearchHint" xml:space="preserve">
-    <value>Type {0} characters to search</value>
+    <value>検索するには {0} 文字以上入力してください</value>
   </data>
   <data name="CompactList_Clear" xml:space="preserve">
-    <value>Clear the search</value>
+    <value>検索をクリア</value>
   </data>
   <data name="CompactList_NoMatches" xml:space="preserve">
-    <value>Nothing matches “{0}”.</value>
+    <value>「{0}」に一致するものはありません。</value>
   </data>
   <data name="CompactList_Unfilterable" xml:space="preserve">
-    <value>This view has no text columns to search.</value>
+    <value>このビューには検索できるテキスト列がありません。</value>
   </data>
   <data name="CompactList_Filtering" xml:space="preserve">
-    <value>Searching…</value>
+    <value>検索しています…</value>
   </data>
 </root>

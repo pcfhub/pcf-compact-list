@@ -7,7 +7,7 @@
   -->
   <control namespace="PCFHub"
            constructor="CompactList"
-           version="0.1.2"
+           version="0.2.0"
            display-name-key="CompactList_Name"
            description-key="CompactList_Desc"
            control-type="standard">
@@ -33,7 +33,10 @@
       own chrome — command bar, view selector, quick find — and all three are
       off by default. The command bar is the one worth reconsidering, but only
       for a control that calls `setSelectedRecordIds()`, and this one does not
-      select.
+      select. Quick find is the one to leave off: with `showSearch` on it would
+      put the subgrid's own search box above this control's, which is two
+      boxes filtering the same view by different means. Whichever a user types
+      in, the other looks broken.
     -->
     <data-set name="records" display-name-key="Records_DataSet_Name" />
 
@@ -133,6 +136,70 @@
               default-value="true" />
 
     <!--
+      The search block. Off by default, so a form that never asked for a
+      search box never grows one on upgrade. A `TwoOptions` cannot carry a
+      default of *on* that the control can tell apart from "never set", but it
+      can carry *off*, and off is what an additive property wants.
+
+      Everything below `showSearch` is read only while it is on.
+    -->
+    <property name="showSearch"
+              display-name-key="ShowSearch_Name"
+              description-key="ShowSearch_Desc"
+              of-type="TwoOptions"
+              usage="input"
+              required="false"
+              default-value="false" />
+
+    <!--
+      Which columns the search runs over, by logical name, comma-separated.
+
+      Empty means every text column in the view, which is the setting most
+      people want and the one that is slowest on a large table. Naming two or
+      three indexed columns is the difference between a search that returns and
+      one that times out.
+
+      Entries that cannot be a logical name are dropped rather than sent: a
+      logical name is /^[a-z][a-z0-9_]*$/, and anything else in a maker's typed
+      string is a mistake rather than a column. A merely *wrong* name is passed
+      through on purpose — the server's rejection is the only thing that will
+      ever name it.
+    -->
+    <property name="searchColumns"
+              display-name-key="SearchColumns_Name"
+              description-key="SearchColumns_Desc"
+              of-type="SingleLine.Text"
+              usage="input"
+              required="false" />
+
+    <property name="matchMode"
+              display-name-key="MatchMode_Name"
+              description-key="MatchMode_Desc"
+              of-type="Enum"
+              usage="input"
+              required="false"
+              default-value="startsWith">
+      <value name="startsWith" display-name-key="MatchMode_StartsWith">startsWith</value>
+      <value name="contains" display-name-key="MatchMode_Contains">contains</value>
+    </property>
+
+    <property name="minimumCharacters"
+              display-name-key="MinimumCharacters_Name"
+              description-key="MinimumCharacters_Desc"
+              of-type="Whole.None"
+              usage="input"
+              required="false"
+              default-value="2" />
+
+    <property name="debounceMs"
+              display-name-key="DebounceMs_Name"
+              description-key="DebounceMs_Desc"
+              of-type="Whole.None"
+              usage="input"
+              required="false"
+              default-value="300" />
+
+    <!--
       Notified *before* the record is opened, so the value is observable even on
       a host where opening does nothing — which is the canvas case.
     -->
@@ -142,9 +209,60 @@
               of-type="SingleLine.Text"
               usage="output" />
 
+    <!--
+      How many records the current filter matched, so a canvas app can say "no
+      results" in its own words rather than relying on this control's.
+
+      It is the server's count, not the length of the page: `totalResultCount`
+      follows the filter, and it is -1 on a view the platform did not count —
+      which travels as -1 rather than as 0, because "none" and "unknown" are
+      different answers and a canvas formula can tell them apart.
+    -->
+    <property name="filteredRecordCount"
+              display-name-key="FilteredRecordCount_Name"
+              description-key="FilteredRecordCount_Desc"
+              of-type="Whole.None"
+              usage="output" />
+
+    <property name="searchTerm"
+              display-name-key="SearchTerm_Name"
+              description-key="SearchTerm_Desc"
+              of-type="SingleLine.Text"
+              usage="output" />
+
     <resources>
       <code path="index.ts" order="1" />
       <css path="css/CompactList.css" order="1" />
+      <!--
+        Every language the control ships.
+
+        A .resx that exists on disk but is not listed here is not shipped, and
+        nothing warns — the file is simply never packed, and the control runs
+        in English for that locale while the repository looks translated.
+        `npm run check` catches both that and a key missing from a language.
+
+        Drop the ones you will not maintain. A stale translation is worse than
+        an honest fallback to English, and every key added to 1033 is a key
+        owed to each file listed here.
+
+        THE ORDER IS DELIBERATE AND 1033 GOES LAST. `pcf-start` picks the .resx
+        by manifest order rather than by locale: it reads whichever file is
+        listed *last* and ignores the LCID and the browser language entirely.
+        The platform itself ignores the order completely — a real app resolves
+        from the user's provisioned language — so `npm start` is the only thing
+        in the world that reads this order, and it is ordered for it. Listing
+        1033 first is the tidier-looking arrangement and it makes `npm start`
+        render the whole control in Japanese, which reads as a broken build.
+
+        The consequence to remember: ADD A NEW LANGUAGE ABOVE THIS LINE, not
+        below it. Appending a sixth file after 1033 silently moves the harness
+        to that language, and the symptom shows up in a `npm start` session
+        nobody connects to a manifest edit.
+      -->
+      <resx path="strings/CompactList.3082.resx" version="1.0.0" />
+      <resx path="strings/CompactList.1036.resx" version="1.0.0" />
+      <resx path="strings/CompactList.1031.resx" version="1.0.0" />
+      <resx path="strings/CompactList.1041.resx" version="1.0.0" />
       <resx path="strings/CompactList.1033.resx" version="1.0.0" />
     </resources>
 
@@ -154,7 +272,10 @@
       control, and this one reaches no Web API, no device and no navigation.
 
       `openDatasetItem()` looks like it should need one and does not — it is a
-      method on the dataset itself, not on context.navigation.
+      method on the dataset itself, not on context.navigation. Filtering is the
+      same: `filtering.setFilter()` and `refresh()` are methods on the dataset,
+      and a control that declared `WebAPI` here to "query" would be asking a
+      maker for a permission it has no code to use.
     -->
   </control>
 </manifest>

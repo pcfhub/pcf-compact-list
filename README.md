@@ -21,6 +21,13 @@ layout has to squeeze its columns or grow a horizontal scrollbar, and neither is
 good. Stacking trades vertical space, which a form already scrolls, for the
 horizontal space it does not have.
 
+With **Show search** on, a box above the list filters the view **server-side**:
+after a typing pause the control sets a `Like` filter across the view's text
+columns, resets the page and refreshes, so the records that come back match
+across the whole view rather than the page that happened to be loaded. This is
+what `pcf-view-filter` used to be; it was folded in at 0.2.0 because the two
+controls were one list with and without a search bar.
+
 Three decisions a reader might otherwise question:
 
 **No `property-set` roles.** A role is a fixed slot — declare `titleField` and
@@ -49,6 +56,12 @@ that it does nothing on a platform that behaves. Load-more mode is untouched,
 because there the accumulation is the feature. `SPEC.md` has the measurements
 and the test that reproduces the original bug.
 
+**The search bar is built once and the list is rebuilt.** A dataset control
+that clears its container on every render is fine for records and fatal for a
+text input — `refresh()` causes a render, so the box the user is typing in would
+cease to exist on the first keystroke. The bar lives in `init`; only the body
+below it is rebuilt.
+
 **Standard, not React.** No React, no Fluent, no `<platform-library>` entries —
 one file of DOM. See the bundle numbers in `SPEC.md`, which are less lopsided
 than that makes it sound.
@@ -61,20 +74,28 @@ hand-written, so it stays short.
 | Property | Type | Usage | Default | What it controls |
 | --- | --- | --- | --- | --- |
 | `records` | dataset | bound | — | The view or table to render |
-| `pageSize` | Whole.None | input | `25` | Records requested per page; clamped to 1–250 |
+| `pageSize` | Whole.None | input | — | Records requested per page; unset adopts the host's own size, set overrides it (1–250) |
 | `paging` | Enum | input | `pager` | `pager` turns pages, `loadMore` appends them |
 | `titleColumn` | SingleLine.Text | input | — | Logical name of the title column; empty uses `isPrimary` |
 | `detailColumns` | Whole.None | input | `3` | Further columns shown beneath the title; `0` is title-only |
 | `showLabels` | TwoOptions | input | `true` | Draw each detail line's column name |
 | `density` | Enum | input | `comfortable` | `comfortable` or `compact` |
 | `openOnItemClick` | TwoOptions | input | `true` | Title is a button calling `openDatasetItem()` |
+| `showSearch` | TwoOptions | input | `false` | Show a search box above the list |
+| `searchColumns` | SingleLine.Text | input | — | Logical names to search, comma-separated; empty is every text column in the view |
+| `matchMode` | Enum | input | `startsWith` | `startsWith` sends `term%`, `contains` sends `%term%` |
+| `minimumCharacters` | Whole.None | input | `2` | Below this nothing is queried |
+| `debounceMs` | Whole.None | input | `300` | Typing pause before the query |
 | `openedRecordId` | SingleLine.Text | output | — | Id of the record whose title was last clicked |
+| `filteredRecordCount` | Whole.None | output | — | The server's count of what the search matched; `-1` where it did not count |
+| `searchTerm` | SingleLine.Text | output | — | What is typed in the search box |
 
 `showLabels` off hides the `<dt>` in CSS rather than omitting it, so a screen
 reader still announces what each value is.
 
-Strings ship in **English (1033) only**. The sibling controls carry five
-languages; this one does not yet.
+Strings ship in five languages: English (1033), German (1031), French (1036),
+Japanese (1041) and Spanish (3082). `npm run check` fails on a key missing from
+any of them.
 
 No `<feature-usage>` is declared, because nothing is used — no Web API, no
 device, no navigation. Installing it presents no permission prompt.
@@ -92,10 +113,14 @@ mock call there too, though `openedRecordId` still updates.
 the interactions work against simulated data when paging does not work there at
 all.
 
-Two presets: **Comfortable** (three labelled lines, pager) and **Compact, no
-labels** (two unlabelled lines, tighter spacing, load-more). The fixture is 24
-accounts in `demo/records.json`, several with deliberately empty values so the
-skip-empty behaviour is visible.
+Searching narrows nothing there either — the filter is server-side and there is
+no server — but the call log shows the debounce, the expression, the paging
+reset and the refresh, which is the half worth watching.
+
+Three presets: **Comfortable** (three labelled lines, pager), **Compact, no
+labels** (two unlabelled lines, tighter spacing, load-more) and **With a search
+box**. The fixture is 24 accounts in `demo/records.json`, several with
+deliberately empty values so the skip-empty behaviour is visible.
 
 ## Install
 
@@ -111,6 +136,8 @@ npm start          # the PCF test harness
 npm run build
 npm run lint
 npm run check      # what CI runs first: placeholders, pcfhub.json, control shape
+npm run smoke      # drives the built bundle against a paging, filtering fake platform
+npm run harness    # serves dev/harness.html: every shape of the control in a browser
 ```
 
 Run `npm run refreshTypes` after every manifest edit — until you do,

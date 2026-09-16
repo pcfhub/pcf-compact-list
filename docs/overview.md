@@ -39,6 +39,31 @@ Reach for [Data Table](https://pcfhub.dev/components/pcf-data-table) instead whe
 you have the width and want columns, sorting and row selection. This control has
 none of those, deliberately.
 
+## Searching it
+
+Turn on **Show search** and a box appears above the list. Type into it and,
+after a short pause, the control asks the platform to re-query: it builds a
+filter of `Like` conditions across the view's text columns, resets the page,
+and calls `refresh()`. What comes back is a different set of records, not a
+subset of the ones already on screen.
+
+- **Server-side is the whole point.** A control that filters the records it
+  already has narrows 25 rows out of 240 — a wrong answer that looks completely
+  right, and one nobody notices until a record that should have matched is
+  missing. This one asks the server, so the result covers the view.
+- **It searches columns, not a fixed one.** With **Search columns** empty it
+  searches every text column the view carries; naming two or three indexed ones
+  is the difference between a search that returns and one that times out on a
+  large table.
+- **What a user types is treated as text.** `%` and `_` are SQL wildcards, and
+  they are escaped before the query is sent. Without that, typing `%` matches
+  every record in the table.
+
+Two outputs come with it — **Filtered record count** and **Search term** — so a
+canvas app can say "no results for *contoso*" in its own words.
+
+Search is off by default. A list that never asked for a box never grows one.
+
 ## What it works with
 
 :::callout{type=info}
@@ -63,6 +88,11 @@ pager.
 | Show labels | On | Prefix each detail line with its column name |
 | Density | Comfortable | How much vertical space each item takes |
 | Open on click | On | Make the title a button that opens the record |
+| Show search | Off | Put a search box above the list that filters the view server-side |
+| Search columns | *(every text column in the view)* | Logical names to search, comma-separated |
+| Match | Starts with | Whether a term matches the start of a value or anywhere inside it |
+| Minimum characters | 2 | How much has to be typed before the view is filtered |
+| Typing pause (ms) | 300 | How long to wait after the last keystroke before querying |
 
 The full list, generated from the control manifest, is on the
 [API reference](api.md) page.

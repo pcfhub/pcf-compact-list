@@ -70,174 +70,174 @@
 
 
   <data name="CompactList_Name" xml:space="preserve">
-    <value>Compact List</value>
+    <value>Lista compacta</value>
   </data>
   <data name="CompactList_Desc" xml:space="preserve">
-    <value>A Dataverse view as a stacked list of records, for narrow spaces.</value>
+    <value>Una vista de Dataverse como lista apilada de registros, para espacios estrechos.</value>
   </data>
   <data name="Records_DataSet_Name" xml:space="preserve">
-    <value>Records</value>
+    <value>Registros</value>
   </data>
   <data name="PageSize_Name" xml:space="preserve">
-    <value>Page size</value>
+    <value>Tamaño de página</value>
   </data>
   <data name="PageSize_Desc" xml:space="preserve">
-    <value>How many records to request per page. The platform may clamp large values.</value>
+    <value>Cuántos registros solicitar por página. La plataforma puede limitar valores grandes.</value>
   </data>
   <data name="Paging_Name" xml:space="preserve">
-    <value>Paging</value>
+    <value>Paginación</value>
   </data>
   <data name="Paging_Desc" xml:space="preserve">
-    <value>Whether further pages replace the list or are appended to it.</value>
+    <value>Si las páginas siguientes sustituyen a la lista o se añaden a ella.</value>
   </data>
   <data name="Paging_Pager_Name" xml:space="preserve">
-    <value>Pager (previous and next)</value>
+    <value>Paginador (anterior y siguiente)</value>
   </data>
   <data name="Paging_LoadMore_Name" xml:space="preserve">
-    <value>Load more (append)</value>
+    <value>Cargar más (añadir)</value>
   </data>
   <data name="TitleColumn_Name" xml:space="preserve">
-    <value>Title column</value>
+    <value>Columna de título</value>
   </data>
   <data name="TitleColumn_Desc" xml:space="preserve">
-    <value>Logical name of the column to use as each item's title. Leave empty to use the view's primary column.</value>
+    <value>Nombre lógico de la columna que se usa como título de cada elemento. Déjelo vacío para usar la columna principal de la vista.</value>
   </data>
   <data name="DetailColumns_Name" xml:space="preserve">
-    <value>Detail lines</value>
+    <value>Líneas de detalle</value>
   </data>
   <data name="DetailColumns_Desc" xml:space="preserve">
-    <value>How many further columns to show beneath the title. Zero shows the title alone.</value>
+    <value>Cuántas columnas más mostrar bajo el título. Cero muestra solo el título.</value>
   </data>
   <data name="ShowLabels_Name" xml:space="preserve">
-    <value>Show labels</value>
+    <value>Mostrar etiquetas</value>
   </data>
   <data name="ShowLabels_Desc" xml:space="preserve">
-    <value>Prefix each detail line with its column name.</value>
+    <value>Anteponer a cada línea de detalle el nombre de su columna.</value>
   </data>
   <data name="Density_Name" xml:space="preserve">
-    <value>Density</value>
+    <value>Densidad</value>
   </data>
   <data name="Density_Desc" xml:space="preserve">
-    <value>How much space each item takes.</value>
+    <value>Cuánto espacio ocupa cada elemento.</value>
   </data>
   <data name="Density_Comfortable_Name" xml:space="preserve">
-    <value>Comfortable</value>
+    <value>Cómoda</value>
   </data>
   <data name="Density_Compact_Name" xml:space="preserve">
-    <value>Compact</value>
+    <value>Compacta</value>
   </data>
   <data name="OpenOnItemClick_Name" xml:space="preserve">
-    <value>Open on click</value>
+    <value>Abrir al hacer clic</value>
   </data>
   <data name="OpenOnItemClick_Desc" xml:space="preserve">
-    <value>Make each item's title a button that opens the record. Turn off for a read-only list.</value>
+    <value>Convertir el título de cada elemento en un botón que abre el registro. Desactívelo para una lista de solo lectura.</value>
   </data>
   <data name="ShowSearch_Name" xml:space="preserve">
-    <value>Show search</value>
+    <value>Mostrar búsqueda</value>
   </data>
   <data name="ShowSearch_Desc" xml:space="preserve">
-    <value>Put a search box above the list that filters the view server-side.</value>
+    <value>Colocar sobre la lista un cuadro de búsqueda que filtra la vista en el servidor.</value>
   </data>
   <data name="SearchColumns_Name" xml:space="preserve">
-    <value>Search columns</value>
+    <value>Columnas de búsqueda</value>
   </data>
   <data name="SearchColumns_Desc" xml:space="preserve">
-    <value>Logical names to search, comma-separated. Empty searches every text column in the view.</value>
+    <value>Nombres lógicos separados por comas. Vacío busca en todas las columnas de texto de la vista.</value>
   </data>
   <data name="MatchMode_Name" xml:space="preserve">
-    <value>Match</value>
+    <value>Coincidencia</value>
   </data>
   <data name="MatchMode_Desc" xml:space="preserve">
-    <value>Whether a term matches the start of a value or anywhere inside it.</value>
+    <value>Si un término coincide con el principio de un valor o con cualquier parte de él.</value>
   </data>
   <data name="MatchMode_StartsWith" xml:space="preserve">
-    <value>Starts with</value>
+    <value>Empieza por</value>
   </data>
   <data name="MatchMode_Contains" xml:space="preserve">
-    <value>Contains</value>
+    <value>Contiene</value>
   </data>
   <data name="MinimumCharacters_Name" xml:space="preserve">
-    <value>Minimum characters</value>
+    <value>Caracteres mínimos</value>
   </data>
   <data name="MinimumCharacters_Desc" xml:space="preserve">
-    <value>How much has to be typed before the view is filtered. Below this the filter is cleared.</value>
+    <value>Cuánto hay que escribir antes de filtrar la vista. Por debajo, el filtro se borra.</value>
   </data>
   <data name="DebounceMs_Name" xml:space="preserve">
-    <value>Typing pause (ms)</value>
+    <value>Pausa de escritura (ms)</value>
   </data>
   <data name="DebounceMs_Desc" xml:space="preserve">
-    <value>How long to wait after the last keystroke before querying the server.</value>
+    <value>Cuánto esperar tras la última pulsación antes de consultar al servidor.</value>
   </data>
   <data name="OpenedRecordId_Name" xml:space="preserve">
-    <value>Opened record ID</value>
+    <value>ID del registro abierto</value>
   </data>
   <data name="OpenedRecordId_Desc" xml:space="preserve">
-    <value>The ID of the row most recently opened.</value>
+    <value>El ID del último registro abierto.</value>
   </data>
   <data name="FilteredRecordCount_Name" xml:space="preserve">
-    <value>Filtered record count</value>
+    <value>Número de registros filtrados</value>
   </data>
   <data name="FilteredRecordCount_Desc" xml:space="preserve">
-    <value>How many records the current search matched, or -1 where the platform did not count them.</value>
+    <value>Cuántos registros coincidieron con la búsqueda actual, o -1 si la plataforma no los contó.</value>
   </data>
   <data name="SearchTerm_Name" xml:space="preserve">
-    <value>Search term</value>
+    <value>Término de búsqueda</value>
   </data>
   <data name="SearchTerm_Desc" xml:space="preserve">
-    <value>What is currently typed in the search box.</value>
+    <value>Lo que hay escrito ahora en el cuadro de búsqueda.</value>
   </data>
   <data name="CompactList_Loading" xml:space="preserve">
-    <value>Loading records…</value>
+    <value>Cargando registros…</value>
   </data>
   <data name="CompactList_Empty" xml:space="preserve">
-    <value>No records.</value>
+    <value>Sin registros.</value>
   </data>
   <data name="CompactList_NoColumns" xml:space="preserve">
-    <value>No columns are selected for this list.</value>
+    <value>No hay columnas seleccionadas para esta lista.</value>
   </data>
   <data name="CompactList_Error" xml:space="preserve">
-    <value>This view could not be loaded.</value>
+    <value>No se pudo cargar esta vista.</value>
   </data>
   <data name="CompactList_Previous" xml:space="preserve">
-    <value>Previous page</value>
+    <value>Página anterior</value>
   </data>
   <data name="CompactList_Next" xml:space="preserve">
-    <value>Next page</value>
+    <value>Página siguiente</value>
   </data>
   <data name="CompactList_PageStatus" xml:space="preserve">
-    <value>Page {0}</value>
+    <value>Página {0}</value>
   </data>
   <data name="CompactList_RangeStatus" xml:space="preserve">
-    <value>{0}–{1} of {2}</value>
+    <value>{0}–{1} de {2}</value>
   </data>
   <data name="CompactList_LoadMore" xml:space="preserve">
-    <value>Load more</value>
+    <value>Cargar más</value>
   </data>
   <data name="CompactList_LoadedStatus" xml:space="preserve">
-    <value>{0} of {1} shown</value>
+    <value>{0} de {1} mostrados</value>
   </data>
   <data name="CompactList_LoadedStatusUnknown" xml:space="preserve">
-    <value>{0} shown</value>
+    <value>{0} mostrados</value>
   </data>
   <data name="CompactList_OpenRecord" xml:space="preserve">
-    <value>Open {0}</value>
+    <value>Abrir {0}</value>
   </data>
   <data name="CompactList_Search" xml:space="preserve">
-    <value>Search</value>
+    <value>Buscar</value>
   </data>
   <data name="CompactList_SearchHint" xml:space="preserve">
-    <value>Type {0} characters to search</value>
+    <value>Escriba {0} caracteres para buscar</value>
   </data>
   <data name="CompactList_Clear" xml:space="preserve">
-    <value>Clear the search</value>
+    <value>Borrar la búsqueda</value>
   </data>
   <data name="CompactList_NoMatches" xml:space="preserve">
-    <value>Nothing matches “{0}”.</value>
+    <value>Nada coincide con «{0}».</value>
   </data>
   <data name="CompactList_Unfilterable" xml:space="preserve">
-    <value>This view has no text columns to search.</value>
+    <value>Esta vista no tiene columnas de texto en las que buscar.</value>
   </data>
   <data name="CompactList_Filtering" xml:space="preserve">
-    <value>Searching…</value>
+    <value>Buscando…</value>
   </data>
 </root>

@@ -1,6 +1,72 @@
 # Compact List
 
-A Dataverse view as a stacked list of records, for narrow spaces.
+A Dataverse view as a stacked list of records, for narrow spaces — with an
+optional search box that filters the view server-side.
+
+## 0.2.0: View Filter folded in
+
+`pcf-view-filter` 0.1.0 was this control with a search bar on top: roughly 600
+of its 969 lines were Compact List verbatim, and its last three commits (pager
+chevrons, host page size, logo) had landed in both repositories by hand. One
+list, one repository.
+
+**The repository, slug and constructor stayed `CompactList`; the code was
+rebuilt on View Filter's skeleton.** View Filter was the newer codebase and
+carried four things any control with a text input needs and Compact List did
+not have: the bar-built-once / body-rebuilt split, the `fluentDesignLanguage`
+dark class, `paging.reset()` on a page-size change, and a `destroy()` that
+releases its timer. Compact List's list features were ported onto that —
+`paging: loadMore`, `titleColumn`, `showLabels`, `density`, and the `<dl>`
+details that skip empty values.
+
+What changed for a maker, and what did not:
+
+- **`showSearch` is a `TwoOptions` defaulting to off.** 0.2.0 is purely
+  additive; an existing form upgrades and looks identical until the box is
+  turned on. The four search inputs and two outputs keep View Filter's names.
+- **`openOnItemClick` stays a `TwoOptions`.** View Filter shipped `itemClick`
+  as an `Enum` on the reasoning — recorded in its SPEC and promoted to the
+  skill — that a `TwoOptions` cannot default to *on*, because `raw: boolean`
+  cannot say "never set". Compact List had shipped `openOnItemClick` with
+  `default-value="true"` and read it as `raw !== false`, and its own
+  `pcf-start` run recorded `openOnItemClick: false` rendering a `<span>`. The
+  two SPECs contradicted each other. **Neither has been checked on a real
+  form**: what has been observed is that the manifest accepts the default and
+  the property generates as `TwoOptionsProperty`. The tie was broken by
+  compatibility — retyping a shipped property loses its configured value on
+  every existing install — and the question of what the platform hands a
+  `TwoOptions` with `default-value="true"` that the maker never touched is on
+  the list below.
+- **View Filter users swap the control by hand.** A different constructor is
+  a different control; there is no in-place upgrade from one to the other.
+  `docs/faq.md` carries the mapping.
+
+Three guarded mutators now share one `updateView` — paging mode, page size and
+(through its handlers) the filter — and each skips its own first run. The
+`appliedShowSearch` guard is the new one: turning the bar off while a term is
+in force clears the filter, once, through the same `appliedFilter` guard as
+Clear, so a bar turned off with nothing typed costs nothing.
+
+**Search × load-more is a combination neither control had run.** A filter does
+`paging.reset()` + `refresh()`, which collapses an accumulated list to page one
+of what matched. The smoke suite models it (ten accumulated → one matching);
+no real form has yet.
+
+### Measured at 0.2.0
+
+Same toolchain as below. `out/`, `obj/`, `Solution/obj/` and `Solution/bin/`
+deleted before the pack.
+
+| Step | Result |
+| --- | --- |
+| `npm run check` | Five languages, 57 keys each, no key missing. |
+| `npm run build` | 52,107 bytes (development). |
+| msbuild Release pack | **14,674 bytes** (was 7,472 at 0.1.0). Solution zips **27,578 bytes** each (was 10,021): the bundle doubled, the CSS is 20 KB with the dark set, and four more .resx at ~10 KB each are most of the rest. |
+| `npm run smoke` against the production bundle | 76 of 76. |
+| `dev/harness.html` in a browser | Bar hidden by default, no platform call. Search on, `contoso` typed: `filtering.setFilter(3) → paging.reset → refresh`, one item, `1–1 of 1`. Load more: `5 of 12 shown` → `10 of 12 shown`, then the search: `1 of 1 shown`, Load more gone. Dark: `--dark` class on, computed foreground `#ffffff`, field fill `#3d3d3d`. |
+
+`grep -c 'Reactv16\|FluentUIReactv940\|griffel\|react-dom'` over the production
+bundle still returns **0**.
 
 ## What it does
 
@@ -191,6 +257,28 @@ and pressing it destroys it. The control sets a flag before calling
 control with a persistent action in its chrome needs the same, and the scaffold
 has no such control so it never had to.
 
+**The filtering contract is three calls in one order**, and each is a shipped
+bug on its own: `filtering.setFilter(expression)`, `paging.reset()`,
+`dataset.refresh()`. Read from the DataSet reference, which states it as
+"[o]nce filter is set, calling refresh() retrieves the filtered data" — the
+paging reset it does not mention, and it is the one that produces an empty
+result rather than a wrong one. Inherited from View Filter.
+
+**`FilterExpression.filterOperator` defaults to And.** A search across four
+columns that omits it asks for the term present in all four at once, matches
+nothing, and reads as a broken query rather than as a missing field. Every
+multi-column search is an `Or` (1).
+
+**The condition operators are not symmetric across hosts.** From the DataSet
+reference's own table: `NotLike` (7) and `NotNull` (13) are canvas-only, while
+`Yesterday` (14), `Today` (15) and `Tomorrow` (16) are model-driven-only. `Like`
+(6) is on both, which is why the search uses nothing else.
+
+**SQL `LIKE` escapes with a character class, not a backslash.** `%`, `_` and `[`
+become `[%]`, `[_]` and `[[]`. A backslash is not an escape character here and
+would be searched for literally. Without this, a user typing `%` matches every
+record in the table — a search box that appears to ignore what was typed.
+
 **`getFormattedValue()` returning an empty string is the only signal available
 for "this record has no value here".** There is no per-cell null on
 `EntityRecord`; `getValue()` would give one, but then the control would be
@@ -280,11 +368,37 @@ trusting this paragraph if the paging code changes again.
   rendered correctly before the fix too. The jsdom driver's pre-fix run passes
   every page-1 assertion and fails only after Next is clicked. A screenshot that
   would settle it is one of page 2.
-- **English only.** `strings/CompactList.1033.resx` is the only resx. The
-  sibling controls ship 1031, 1036, 1041 and 3082 as well.
-- **Never imported into an environment.** Everything above is a local build and
-  a local pack. No form, no canvas app, no real view.
 - **`detailColumns` has no upper bound beyond the column count.** A view with 40
   columns and `detailColumns` at 40 will render 40 lines per record. That is the
   maker's call, but there is no virtualisation behind it — see
   `docs/limitations.md`.
+- **0.2.0 has not been imported over 0.1.2.** The claim that an existing form
+  upgrades unchanged rests on every new property being optional with a
+  default, which is how the platform is documented to behave. The upgrade on
+  the Accounts test form is the check.
+- **Whether a `TwoOptions` with `default-value="true"` arrives as `true` when
+  the maker never touched it.** See "0.2.0" above. If it arrives as `false` or
+  `null`, `openOnItemClick`'s `raw !== false` read is what keeps the titles
+  clickable, and View Filter's finding was right about the type and wrong
+  about the consequence.
+- **Search × load-more on a real form.** Modelled in `dev/smoke.js`, unobserved.
+
+Carried over from View Filter's own "Not verified", none yet settled:
+
+- **Whether the hub's demo harness discards a filter, or applies it.** It is
+  documented as discarding a *sort* request on each render, and `npm start`'s
+  dataset mock logs every mutator and moves nothing — so the demo limitation is
+  written from that analogy rather than from observation. Confirm against the
+  first release and correct the wording either way.
+- **Whether `dataset.filtering` is present on every host.** Typed as required,
+  checked anyway. Nothing has yet been observed handing over a dataset without
+  it.
+- **Whether a maker-supplied column name that is wrong reaches the user as a
+  readable error.** The control passes a syntactically valid but unknown
+  logical name through on purpose. What a model-driven form does with the
+  rejection — surface it, swallow it, blank the subgrid — has not been seen.
+- **Whether `Like` is case-insensitive on every deployment.** Dataverse's
+  default collation is, and the dev rig models it that way.
+- **The interaction with a subgrid's own quick-find box.** Whether the
+  platform's own filter and this control's `setFilter` compose or replace each
+  other is unknown.

@@ -3,34 +3,280 @@
 
   A code component's CSS is loaded into the whole page, not into a shadow root,
   so an unscoped `ul { }` here restyles the host form.
-
-  The colours are Fluent design tokens, which the host emits as CSS custom
-  properties — so the list picks up the theme without importing a single Fluent
-  component. The fallbacks after each comma are what the control looks like if
-  that ever stops being true.
 */
 
+/*
+  The palette, as Fluent's design tokens with literal fallbacks.
+
+  `FluentProvider` is what emits the tokens as CSS custom properties on its own
+  wrapper, and a model-driven form already mounts one above every code
+  component on the page, so the tokens are there to be read without this
+  control mounting anything. The token wins wherever the host publishes it, and
+  the control follows the app's theme and brand colour with no code at all. The
+  fallbacks are what it looks like where nothing does — a canvas app, or
+  PCFHub's demo harness.
+
+  They are Fluent's web light theme, read from `@fluentui/tokens` rather than
+  eyeballed. Two of them were wrong in an earlier version of this file:
+  `colorPaletteRedForeground1` is `#bc2f32` and not `#b10e1c`, and
+  `colorBrandForegroundLink` is `#115ea3` and not the `#0f6cbd` of
+  `colorCompoundBrandForeground1`. Neither was visible until a host stopped
+  publishing tokens, which is exactly when a fallback is the only thing anybody
+  sees.
+
+  Declared once here rather than written at each use site, because the dark set
+  below has to redefine them and a palette scattered through the file is a
+  palette that cannot be.
+*/
 .CompactList {
-    font-family: var(--fontFamilyBase, 'Segoe UI', system-ui, sans-serif);
+    --CompactList-foreground: var(--colorNeutralForeground1, #242424);
+    --CompactList-foreground-secondary: var(--colorNeutralForeground3, #616161);
+    --CompactList-foreground-detail: var(--colorNeutralForeground2, #424242);
+    --CompactList-foreground-disabled: var(--colorNeutralForegroundDisabled, #bdbdbd);
+    --CompactList-foreground-danger: var(--colorPaletteRedForeground1, #bc2f32);
+    --CompactList-link: var(--colorBrandForegroundLink, #115ea3);
+    --CompactList-link-hover: var(--colorBrandForegroundLinkHover, #0f548c);
+    --CompactList-background: var(--colorNeutralBackground1, #ffffff);
+    --CompactList-background-hover: var(--colorNeutralBackground1Hover, #f5f5f5);
+    --CompactList-background-pressed: var(--colorNeutralBackground1Pressed, #e0e0e0);
+    --CompactList-stroke: var(--colorNeutralStroke1, #d1d1d1);
+    --CompactList-stroke-hover: var(--colorNeutralStroke1Hover, #c7c7c7);
+    --CompactList-stroke-subtle: var(--colorNeutralStroke2, #e0e0e0);
+    --CompactList-stroke-disabled: var(--colorNeutralStrokeDisabled, #e0e0e0);
+    --CompactList-focus-inner: var(--colorStrokeFocus1, #ffffff);
+    --CompactList-focus-outer: var(--colorStrokeFocus2, #000000);
+    --CompactList-radius: var(--borderRadiusMedium, 4px);
+    --CompactList-duration: var(--durationFaster, 100ms);
+    --CompactList-curve: var(--curveEasyEase, cubic-bezier(0.33, 0, 0.67, 1));
+
+    font-family: var(--fontFamilyBase, "Segoe UI", system-ui, sans-serif);
     font-size: var(--fontSizeBase300, 14px);
-    color: var(--colorNeutralForeground1, #242424);
+    color: var(--CompactList-foreground);
     display: flex;
     flex-direction: column;
     gap: var(--spacingVerticalS, 8px);
     width: 100%;
 }
 
+/*
+  The dark fallbacks, applied from `fluentDesignLanguage.isDarkTheme` in
+  `index.ts` rather than from `prefers-color-scheme`. A model-driven app carries
+  its own theme and the operating system's setting says nothing about it, so the
+  media query would hand an OS-dark machine on a light app a dark list.
+
+  This block only ever bites on a host that publishes no tokens; where the
+  tokens are present every `var()` above already resolves.
+*/
+.CompactList--dark {
+    --CompactList-foreground: var(--colorNeutralForeground1, #ffffff);
+    --CompactList-foreground-secondary: var(--colorNeutralForeground3, #adadad);
+    --CompactList-foreground-detail: var(--colorNeutralForeground2, #d6d6d6);
+    --CompactList-foreground-disabled: var(--colorNeutralForegroundDisabled, #5c5c5c);
+    --CompactList-foreground-danger: var(--colorPaletteRedForeground1, #e37d80);
+    --CompactList-link: var(--colorBrandForegroundLink, #479ef5);
+    --CompactList-link-hover: var(--colorBrandForegroundLinkHover, #62abf5);
+    --CompactList-background: var(--colorNeutralBackground1, #292929);
+    --CompactList-background-hover: var(--colorNeutralBackground1Hover, #3d3d3d);
+    --CompactList-background-pressed: var(--colorNeutralBackground1Pressed, #1f1f1f);
+    --CompactList-stroke: var(--colorNeutralStroke1, #666666);
+    --CompactList-stroke-hover: var(--colorNeutralStroke1Hover, #757575);
+    --CompactList-stroke-subtle: var(--colorNeutralStroke2, #525252);
+    --CompactList-stroke-disabled: var(--colorNeutralStrokeDisabled, #424242);
+    --CompactList-focus-inner: var(--colorStrokeFocus1, #000000);
+    --CompactList-focus-outer: var(--colorStrokeFocus2, #ffffff);
+}
+
+/* `mode.isVisible` is false. Canvas relies on this; model-driven hides the
+   section itself, so this is the cheap half of supporting both. */
+.CompactList--hidden {
+    display: none;
+}
+
+/* ------------------------------------------------------------- the bar */
+
+/*
+  Built once and never rebuilt.
+
+  The rest of this control is thrown away and recreated on every render, which
+  is fine for records and fatal for a text input — the box the user is typing in
+  would cease to exist on the first keystroke's refresh. So the bar is a
+  separate element in `init` and `render()` never touches it.
+
+  `hidden` while `showSearch` is off, which is the default: a list that never
+  asked for a search box never shows one. The `[hidden]` rule below is required
+  rather than belt-and-braces — `hidden` works by way of a UA rule that any
+  author `display` declaration outranks, and this one has `display: flex`.
+*/
+.CompactList-bar {
+    display: flex;
+    align-items: center;
+    gap: var(--spacingHorizontalS, 8px);
+}
+
+.CompactList-bar[hidden] {
+    display: none;
+}
+
+/*
+  Fluent's `filled-darker` Input, which is the shape a model-driven form draws:
+  a filled box with transparent borders, 32px tall — `medium`, the height a form
+  uses. The borders are transparent rather than absent so the box does not
+  change size when the disabled state colours them in.
+
+  The *wrapper* is the field, not the input. That is what puts the magnifier
+  inside the box rather than beside it, the way Fluent's `contentBefore` does,
+  and it is why the focus ring below is on `:focus-within`: the ring belongs to
+  the whole surface, including the icon, not to the hole in it.
+*/
+.CompactList-field {
+    display: flex;
+    align-items: center;
+    gap: var(--spacingHorizontalXS, 4px);
+    flex: 1 1 auto;
+    /* A flex item's default `min-width: auto` refuses to shrink below its
+       intrinsic width, which pushes the Clear button off a narrow form instead
+       of narrowing the box. Canvas apps put controls in narrow places. */
+    min-width: 0;
+    box-sizing: border-box;
+    min-height: 32px;
+    padding: 0 var(--spacingHorizontalM, 12px);
+    border: 1px solid transparent;
+    border-radius: var(--CompactList-radius);
+    background-color: var(--CompactList-background-hover);
+    transition: background-color var(--CompactList-duration) var(--CompactList-curve);
+}
+
+.CompactList-field:focus-within {
+    outline: 2px solid var(--CompactList-focus-outer);
+    outline-offset: 1px;
+    box-shadow: 0 0 0 4px var(--CompactList-focus-inner);
+}
+
+/*
+  The magnifier. `flex: none` so it never shrinks — an icon squashed to 4px on a
+  narrow form is worse than no icon — and the placeholder colour so it reads as
+  chrome rather than as content.
+
+  `currentColor` in the SVG resolves against this, which is the entire reason
+  the icon is inline rather than an `<img>`: an image renders in an isolated
+  document that cannot see this rule, and comes out black on a dark form.
+*/
+.CompactList-searchIcon {
+    flex: 0 0 auto;
+    width: 16px;
+    height: 16px;
+    color: var(--CompactList-foreground-secondary);
+}
+
+/* The input is a hole in the surface above: no fill, no border, no ring of its
+   own. Give it a background and the wrapper's fill shows as a lighter rectangle
+   inside the field. */
+.CompactList-search {
+    flex: 1 1 auto;
+    min-width: 0;
+    align-self: stretch;
+    box-sizing: border-box;
+    padding: 0;
+    border-style: none;
+    background-color: transparent;
+    color: var(--CompactList-foreground);
+    font: inherit;
+    outline-style: none;
+}
+
+/* `opacity: 1` because Firefox dims placeholders by default, which drags the
+   colour below 4.5:1 against the fill. */
+.CompactList-search::placeholder {
+    color: var(--CompactList-foreground-secondary);
+    opacity: 1;
+}
+
+/*
+  The UA's own clear button, removed.
+
+  `type="search"` earns its keyboard and its semantics, and brings a WebKit
+  cancel button along with it — a second way to clear, drawn by the browser in a
+  colour it chose, sitting next to the one this control draws. Two X's in one
+  field is worse than either alone.
+*/
+.CompactList-search::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+/*
+  A view with nothing to search — no text column, or a host that supplies no
+  `filtering` at all. Recoloured rather than dimmed: this is not a transient
+  state, and `opacity` would leave the placeholder below contrast for as long as
+  the control is on the form.
+*/
+.CompactList-field--disabled {
+    background-color: transparent;
+    border-color: var(--CompactList-stroke-disabled);
+}
+
+.CompactList-field--disabled .CompactList-searchIcon,
+.CompactList-search:disabled,
+.CompactList-search:disabled::placeholder {
+    color: var(--CompactList-foreground-disabled);
+}
+
+.CompactList-search:disabled {
+    cursor: not-allowed;
+}
+
+/*
+  Icon-only, and therefore square: 32px to match the field's height, so the two
+  line up on the same baseline. Its accessible name is an `aria-label` set in
+  `index.ts` from the .resx.
+*/
+.CompactList-clear {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    box-sizing: border-box;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    color: var(--CompactList-foreground);
+    background-color: var(--CompactList-background);
+    border: 1px solid var(--CompactList-stroke);
+    border-radius: var(--CompactList-radius);
+    cursor: pointer;
+}
+
+.CompactList-clearIcon {
+    width: 16px;
+    height: 16px;
+}
+
+.CompactList-clear:hover {
+    background-color: var(--CompactList-background-hover);
+    border-color: var(--CompactList-stroke-hover);
+}
+
+.CompactList-clear[hidden] {
+    display: none;
+}
+
+/* ----------------------------------------------------------- the list */
+
+.CompactList-body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacingVerticalS, 8px);
+}
+
 .CompactList-message {
     margin: 0;
     padding: var(--spacingVerticalL, 16px);
-    color: var(--colorNeutralForeground3, #616161);
+    color: var(--CompactList-foreground-secondary);
 }
 
 .CompactList-error {
-    color: var(--colorPaletteRedForeground1, #b10e1c);
+    color: var(--CompactList-foreground-danger);
 }
-
-/* ------------------------------------------------------------------ items */
 
 .CompactList-items {
     list-style: none;
@@ -40,9 +286,12 @@
 }
 
 /*
-  Dim rather than blank while a page loads. Replacing the items with a spinner
-  makes every page turn flash empty — and in load-more mode it would blank the
-  records the user is already reading.
+  Dim rather than blank while a page or a query loads. Replacing the items with
+  a spinner makes every page turn and every keystroke flash empty — and in
+  load-more mode it would blank the records the user is already reading.
+
+  This is the one place `opacity` is the right tool: it is transient and it says
+  "stale", not "unavailable".
 */
 .CompactList-items.is-loading {
     opacity: 0.6;
@@ -53,7 +302,7 @@
     flex-direction: column;
     gap: var(--spacingVerticalXXS, 2px);
     padding: var(--spacingVerticalS, 8px) var(--spacingHorizontalS, 8px);
-    border-bottom: 1px solid var(--colorNeutralStroke2, #e0e0e0);
+    border-bottom: 1px solid var(--CompactList-stroke-subtle);
 }
 
 .CompactList-items.is-compact .CompactList-item {
@@ -72,10 +321,12 @@
 
 .CompactList-title {
     font-weight: var(--fontWeightSemibold, 600);
-    text-align: left;
+    text-align: start;
 }
 
-/* The title is a real <button>, so undo the browser's chrome rather than using a div. */
+/* The title is a real <button> where clicking opens the record, so undo the
+   browser's chrome rather than using a div. It is a <span> where it does not,
+   because a button that does nothing is worse than no button. */
 button.CompactList-title {
     background: none;
     border: none;
@@ -83,22 +334,14 @@ button.CompactList-title {
     margin: 0;
     font: inherit;
     font-weight: var(--fontWeightSemibold, 600);
-    color: var(--colorBrandForegroundLink, #0f6cbd);
+    color: var(--CompactList-link);
     cursor: pointer;
+    transition: color var(--CompactList-duration) var(--CompactList-curve);
 }
 
 button.CompactList-title:hover {
+    color: var(--CompactList-link-hover);
     text-decoration: underline;
-}
-
-/*
-  Never remove the focus ring. A list whose only interactive element is the
-  title is unusable by keyboard without it.
-*/
-.CompactList button:focus-visible {
-    outline: 2px solid var(--colorStrokeFocus2, #0f6cbd);
-    outline-offset: 2px;
-    border-radius: var(--borderRadiusSmall, 2px);
 }
 
 /* ---------------------------------------------------------------- details */
@@ -114,16 +357,16 @@ button.CompactList-title:hover {
     display: grid;
     grid-template-columns: auto 1fr;
     column-gap: var(--spacingHorizontalXS, 4px);
-    color: var(--colorNeutralForeground2, #424242);
+    color: var(--CompactList-foreground-detail);
     font-size: var(--fontSizeBase200, 12px);
 }
 
 .CompactList-label {
-    color: var(--colorNeutralForeground3, #616161);
+    color: var(--CompactList-foreground-secondary);
 }
 
 .CompactList-label::after {
-    content: ':';
+    content: ":";
 }
 
 .CompactList-value {
@@ -162,7 +405,7 @@ button.CompactList-title:hover {
 }
 
 .CompactList-status {
-    color: var(--colorNeutralForeground3, #616161);
+    color: var(--CompactList-foreground-secondary);
     font-size: var(--fontSizeBase200, 12px);
 }
 
@@ -171,28 +414,43 @@ button.CompactList-title:hover {
     text-align: center;
 }
 
+/*
+  Fluent's secondary Button: 32px tall, semibold, a neutral fill that darkens on
+  hover and again on press. The height matters more than it looks — a footer
+  button that is 26px tall next to a form full of 32px controls is the same
+  mismatch as a field that is the wrong height, just further down the page.
+*/
 .CompactList-footer button {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: var(--spacingHorizontalXS, 4px);
-    font: inherit;
+    box-sizing: border-box;
+    min-height: 32px;
     padding: var(--spacingVerticalXS, 4px) var(--spacingHorizontalM, 12px);
-    color: var(--colorNeutralForeground1, #242424);
-    background: var(--colorNeutralBackground1, #ffffff);
-    border: 1px solid var(--colorNeutralStroke1, #d1d1d1);
-    border-radius: var(--borderRadiusMedium, 4px);
+    font: inherit;
+    font-weight: var(--fontWeightSemibold, 600);
+    color: var(--CompactList-foreground);
+    background-color: var(--CompactList-background);
+    border: 1px solid var(--CompactList-stroke);
+    border-radius: var(--CompactList-radius);
     cursor: pointer;
+    outline-style: none;
+    transition:
+        background-color var(--CompactList-duration) var(--CompactList-curve),
+        border-color var(--CompactList-duration) var(--CompactList-curve),
+        color var(--CompactList-duration) var(--CompactList-curve);
 }
 
 /*
   The pager chevrons.
 
-  Inline `<svg>`, and they inherit the button’s `color`. An icon behind
+  Inline `<svg>` for the same reason as the two in the bar: an icon behind
   `<img src>` renders in an isolated document that cannot read this stylesheet,
-  so it could not follow a dark theme.
+  so it cannot follow a dark theme. These inherit the button’s `color`.
 
-  `flex: none` so a chevron never squashes on a narrow form — the label is what
-  should give way instead.
+  `flex: none` so a chevron never squashes on a narrow form, where the label is
+  what should wrap instead.
 */
 .CompactList-chevron {
     flex: 0 0 auto;
@@ -201,23 +459,124 @@ button.CompactList-title:hover {
 }
 
 /*
-  Mirrored in right-to-left. A chevron is directional, and reordering the flex
-  children does not turn the glyph around: `<` stays `<` and ends up pointing at
-  the label instead of away from it.
+  Mirrored in right-to-left, because a chevron is directional and the flex
+  reorder alone does not turn the glyph around — `<` stays `<` and ends up
+  pointing at the text instead of away from it.
 
-  Keyed off any right-to-left ancestor rather than this control’s own `dir`,
-  which it does not set — in an right-to-left app the host form is what carries
-  it.
+  Keyed off *any* right-to-left ancestor rather than off this control’s own
+  `dir`. This control sets `dir` on its container while the bar is shown, but a
+  host form in a right-to-left language sets it further up — an ancestor
+  selector is right in both cases.
 */
 [dir="rtl"] .CompactList-chevron {
     transform: scaleX(-1);
 }
 
 .CompactList-footer button:hover:not(:disabled) {
-    background: var(--colorNeutralBackground1Hover, #f5f5f5);
+    background-color: var(--CompactList-background-hover);
+    border-color: var(--CompactList-stroke-hover);
 }
 
+.CompactList-footer button:active:not(:disabled) {
+    background-color: var(--CompactList-background-pressed);
+}
+
+/*
+  Recoloured rather than dimmed. A pager sits at the end of a page and is
+  disabled for as long as the user is on the first or last one, which is not a
+  transient state — `opacity` there would take the label below contrast and
+  leave it there.
+*/
 .CompactList-footer button:disabled {
-    color: var(--colorNeutralForegroundDisabled, #bdbdbd);
+    color: var(--CompactList-foreground-disabled);
+    background-color: var(--CompactList-background);
+    border-color: var(--CompactList-stroke-disabled);
     cursor: default;
+}
+
+/* ------------------------------------------------------------------ focus */
+
+/*
+  Fluent's focus indicator: a dark ring with a light one immediately inside it,
+  so the shape survives against a light row and a dark one. A single outline
+  disappears into whichever background happens to match it.
+
+  `:focus-visible` rather than `:focus`, so clicking a record does not leave a
+  ring behind on a control the user is no longer navigating by keyboard. Never
+  removed: a list whose only interactive elements are buttons is unusable by
+  keyboard without it.
+*/
+.CompactList button:focus-visible {
+    outline: 2px solid var(--CompactList-focus-outer);
+    outline-offset: 1px;
+    box-shadow: 0 0 0 4px var(--CompactList-focus-inner);
+    border-radius: var(--CompactList-radius);
+}
+
+/*
+  Forced colours collapse every tint to one of a handful of system keywords, so
+  anything carrying meaning by colour has to carry it by shape as well. The link
+  colour vanishes there; the borders and the focus ring are what is left to
+  carry structure, so they are restated against system keywords rather than
+  left to be overridden into invisibility.
+
+  The search box matters most here: its whole appearance is a fill, and a fill
+  is exactly what forced colours removes.
+*/
+@media (forced-colors: active) {
+    .CompactList-field,
+    .CompactList-clear,
+    .CompactList-footer button {
+        border-color: ButtonBorder;
+    }
+
+    .CompactList-field--disabled,
+    .CompactList-search:disabled,
+    .CompactList-footer button:disabled {
+        color: GrayText;
+        border-color: GrayText;
+    }
+
+    /* Both icons are drawn with currentColor, so they follow whatever colour
+       survives here. CanvasText is what the surrounding text resolves to, which
+       keeps them visible against either system background. */
+    .CompactList-searchIcon,
+    .CompactList-clearIcon {
+        color: CanvasText;
+    }
+
+    .CompactList-field--disabled .CompactList-searchIcon {
+        color: GrayText;
+    }
+
+    .CompactList-item {
+        border-bottom-color: ButtonBorder;
+    }
+
+    /* An open-record button is a link in everything but markup, and forced
+       colours is where that has to be said out loud — the brand colour is gone
+       and the underline is the only thing left distinguishing it from a line
+       of text. */
+    button.CompactList-title {
+        color: LinkText;
+        text-decoration: underline;
+    }
+
+    .CompactList button:focus-visible,
+    .CompactList-field:focus-within {
+        outline-color: Highlight;
+    }
+}
+
+/*
+  Shortened, not removed. These transitions are decoration — a hover, a button
+  press, a fill darkening — and none carries state on its own, so cutting them
+  to nothing loses nothing.
+*/
+@media screen and (prefers-reduced-motion: reduce) {
+    .CompactList-field,
+    button.CompactList-title,
+    .CompactList-footer button {
+        transition-duration: 0.01ms;
+    }
 }

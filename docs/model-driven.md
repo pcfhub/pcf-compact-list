@@ -57,12 +57,55 @@ table.
 | Title column | `name`, `subject`, `fullname` … | The column's **logical** name, not its display name. A name that matches nothing falls back to the primary column. |
 | Paging | `pager` or `loadMore` | |
 | Density | `comfortable` or `compact` | |
+| Show search | Yes / No | Off by default. See below. |
+| Search columns | `name, accountnumber` | Logical names, comma-separated. Empty searches every text column in the view. |
+| Match | `startsWith` or `contains` | |
+
+## Adding a search box
+
+Turn **Show search** on and a box appears above the list. It filters the view
+**server-side**: after a short typing pause the control sets a filter on the
+dataset, resets the page and refreshes, so the records that come back are the
+ones matching across the whole view rather than the page that happened to be
+loaded.
+
+### Choosing the search columns
+
+Leaving **Search columns** empty is the setting that needs no thought and the
+one that is slowest: every text column in the view becomes an `Or` condition,
+and on a large table that is a query the server has to work for.
+
+Name the columns people actually search by — the primary name column, an account
+number, a reference — and prefer ones with an index behind them. The property
+takes logical names, comma-separated:
+
+```text
+name, accountnumber, cr123_reference
+```
+
+Entries that cannot be a logical name are dropped. An entry that *could* be one
+but is not a column in this table is passed through, so the server's error names
+it — that is the typo worth surfacing rather than swallowing.
+
+### Starts with, or contains
+
+**Starts with** sends `term%` and can use an index. **Contains** sends `%term%`
+and cannot: the server has to read every row. On a small table the difference is
+invisible; on a large one it is the difference between a search and a timeout.
+
+Start with **Starts with** and change it only if people complain that searching
+for a word in the middle of a name finds nothing.
 
 ## The subgrid's own chrome
 
 The command bar, view selector and quick find are **off**. Compact List does not
 report a selection, so there is nothing for a ribbon button to act on, and the
 list is a reading surface rather than a grid you operate.
+
+Quick find is the one to leave off deliberately once **Show search** is on:
+turning it on would put the platform's own search box directly above this one —
+two boxes over the same view, filtering by different means, and whichever a user
+types in the other looks broken.
 
 If you need the ribbon, you need selection, and that means
 [Data Table](https://pcfhub.dev/components/pcf-data-table).
