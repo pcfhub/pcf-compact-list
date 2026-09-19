@@ -4,13 +4,12 @@
   "name": "Compact List",
   "tagline": "A Dataverse view as a stacked list of records, for narrow spaces.",
   "category": "data",
+  "hosts": ["canvas", "model-driven"],
   "tags": [
-    "dataset",
     "list",
     "compact",
     "search",
     "filter",
-    "canvas",
     "no-react"
   ],
   "control": {
