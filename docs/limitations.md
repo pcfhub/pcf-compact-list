@@ -87,10 +87,6 @@ All of these apply only with **Show search** on.
   case-insensitive and the control assumes nothing else; on a case-sensitive
   deployment `Starts with` would behave differently from what these pages
   promise.
-- **The demo on the hub cannot filter.** Filtering is server-side and the demo
-  harness has no server behind it, so typing narrows nothing there. What the
-  demo does show — and it is the interesting half — is the call log: the
-  debounce, the expression, the paging reset, the refresh.
 
 ## Not supported
 

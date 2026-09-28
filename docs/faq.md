@@ -57,13 +57,6 @@ That is what it is for. Set **Density** to `compact`, **Detail lines** to 1 or
 2, and **Show labels** off. The labels stay in the accessibility tree even when
 they are not drawn, so a screen reader still announces what each value is.
 
-## Why does the demo on this site not page?
-
-The demo harness serves the whole fixture as a single page and reports that
-there is no next page, so Previous and Next are disabled and **Load more** never
-appears. That is the harness, not the control — which is why the demo is marked
-*limited* rather than *full*.
-
 ## Where is the search box?
 
 **Show search** is off by default. Turn it on and the box appears above the
@@ -116,12 +109,6 @@ properties have the same names; `itemClick: none` becomes **Open on click**
 off; and `detailColumns` is the same. Remove View Filter from the subgrid, add
 Compact List, and copy the values across. The two are different controls, so
 the swap is by hand — there is no in-place upgrade from one to the other.
-
-## Why does searching do nothing in the demo on the hub?
-
-Filtering is server-side and the demo harness has no server behind it. The call
-log below the demo is the part worth watching: the debounce, the expression, the
-paging reset and the refresh are all real.
 
 ## How do I report a bug?
 

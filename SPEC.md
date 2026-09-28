@@ -330,8 +330,8 @@ Three distinct faults, one cause:
 
 ### How it was checked
 
-Neither harness can page — `pcf-start` and the hub's demo harness both report a
-single page — so the control was compiled to CommonJS with `tsc` and driven
+Neither harness could page at the time — `pcf-start` and the hub's demo harness
+both reported a single page, the hub's until pcfhub/pcfhub#51 — so the control was compiled to CommonJS with `tsc` and driven
 under jsdom against a fake dataset reproducing the platform's behaviour: 6
 records, page size 3, `loadNextPage` ignoring its argument, `hasPreviousPage`
 pinned false, `firstPageNumber` reporting the loaded page count.
@@ -383,13 +383,22 @@ trusting this paragraph if the paging code changes again.
   about the consequence.
 - **Search × load-more on a real form.** Modelled in `dev/smoke.js`, unobserved.
 
-Carried over from View Filter's own "Not verified", none yet settled:
+Carried over from View Filter's own "Not verified". One is now settled:
 
-- **Whether the hub's demo harness discards a filter, or applies it.** It is
-  documented as discarding a *sort* request on each render, and `npm start`'s
-  dataset mock logs every mutator and moves nothing — so the demo limitation is
-  written from that analogy rather than from observation. Confirm against the
-  first release and correct the wording either way.
+- **Settled 2026-09-27: the hub's demo harness applies a filter.** It
+  discarded one until pcfhub/pcfhub#51. It now applies the expression on the
+  next fetch and pages the result.
+
+  Checked with 0.2.0's published bundle against that harness:
+
+  - `wood`, contains, on the account name gave Woodgrove Bank alone, "1–1 of 1",
+    and `filteredRecordCount` 1;
+  - clearing the box gave "1–8 of 24" and 24;
+  - at eight a page, the pager went "1–8", "9–16", "17–24" and back;
+  - Load more went from 8 to 16 to 24 shown, then disappeared.
+
+  The demo moved to `mocked` and the presets to eight a page. Search × load-more
+  was not tried there.
 - **Whether `dataset.filtering` is present on every host.** Typed as required,
   checked anyway. Nothing has yet been observed handing over a dataset without
   it.

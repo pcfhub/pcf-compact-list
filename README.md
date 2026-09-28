@@ -104,25 +104,33 @@ device, no navigation. Installing it presents no permission prompt.
 
 ## On the hub
 
-`demo.fidelity` is **`limited`**, and the limitation is the harness rather than
-the control. The demo serves the whole fixture as a single page and reports no
-next or previous page, so the pager renders disabled and **Load more** never
-appears at all — which means the demo cannot show the difference between the two
-paging modes, the one thing most worth seeing. `openDatasetItem()` is a logged
-mock call there too, though `openedRecordId` still updates.
+`demo.fidelity` is **`mocked`**. The interactions work, against a fixture
+rather than Dataverse.
 
-`full` would be a lie for a dataset control that pages, and `mocked` would claim
-the interactions work against simulated data when paging does not work there at
-all.
+It was `limited` until pcfhub/pcfhub#51. Until then the hub's demo harness
+served the whole fixture as a single page, so **Load more** never appeared and a
+search narrowed nothing. The harness now applies a filter and a page size on the
+next fetch, as a form does:
 
-Searching narrows nothing there either — the filter is server-side and there is
-no server — but the call log shows the debounce, the expression, the paging
-reset and the refresh, which is the half worth watching.
+- the pager moves;
+- Load more adds a page at a time;
+- a search narrows the list, and `filteredRecordCount` follows.
 
-Three presets: **Comfortable** (three labelled lines, pager), **Compact, no
-labels** (two unlabelled lines, tighter spacing, load-more) and **With a search
-box**. The fixture is 24 accounts in `demo/records.json`, several with
-deliberately empty values so the skip-empty behaviour is visible.
+`openDatasetItem()` is still a logged mock call, though `openedRecordId` still
+updates.
+
+`full` would still be wrong: the records come from a fixture, and a real view's
+size and clamping are not there.
+
+Three presets, each at eight records a page, so the 24 accounts make three
+pages:
+
+- **Comfortable**: three labelled lines, with a pager.
+- **Compact, no labels**: two unlabelled lines, tighter spacing, and Load more.
+- **With a search box**.
+
+The fixture is 24 accounts in `demo/records.json`. Several have deliberately
+empty values, so the skip-empty behaviour is visible.
 
 ## Install
 

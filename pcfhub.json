@@ -34,25 +34,24 @@
     ]
   },
   "demo": {
-    "fidelity": "limited",
+    "fidelity": "mocked",
     "bundle": "out/controls/CompactList/bundle.js",
     "styles": [
       "out/controls/CompactList/css/CompactList.css"
     ],
     "datasetFixture": "demo/records.json",
     "limitations": [
-      "Searching narrows nothing here. Filtering is server-side: with Show search on, the control calls dataset.filtering.setFilter() and then refresh(), which on a real view sends the query and returns a different set of records. The demo harness has no server behind it — it accepts the filter request and renders the same rows. Everything the control does up to that point is real and visible in the call log: the debounce, the expression it builds, the paging reset. The filtered record count output therefore never changes either.",
-      "Paging is inert. The harness puts every fixture record on a single page and reports hasNextPage and hasPreviousPage as false, so Previous and Next render disabled and the Load more button does not appear at all. The page size property does nothing either, because the harness's setPageSize() is an empty function.",
-      "Because Load more never appears, the demo cannot show the difference between the two paging modes. Switching the Paging preset changes the footer the control would render on a real view, not what the harness can exercise.",
+      "Search narrows the list. With Show search on, the control calls dataset.filtering.setFilter() and then refresh(), and the demo applies the expression to the whole fixture on that fetch, as a real view does on the server; the count and the filteredRecordCount output follow, and clearing the box brings every account back. The match ignores case, as Dataverse\u2019s default collation does. The call log under the demo shows the rest of what the control does: the debounce, the expression and the paging reset.",
+      "Both paging modes work against the fixture. Every preset asks for eight records a page, so the 24 accounts make three pages: Comfortable and With a search box page with Previous and Next, and Compact, no labels adds eight at a time with Load more until all 24 are shown. What a real view adds is size: the page size is a request the platform may clamp, and a large view may not count its rows.",
       "Clicking an item calls dataset.openDatasetItem(), which the harness logs as a mock call: there is no Dataverse behind this origin and no form to open. The openedRecordId output still updates, so the value a canvas app would react to is visible."
     ],
     "presets": [
       {
         "slug": "default",
         "name": "Comfortable",
-        "description": "Three labelled detail lines under each account name, with a pager.",
+        "description": "Three labelled detail lines under each account name, with a pager: eight to a page, so the 24 accounts make three.",
         "props": {
-          "pageSize": 25,
+          "pageSize": 8,
           "paging": "pager",
           "detailColumns": 3,
           "showLabels": true,
@@ -69,9 +68,9 @@
       {
         "slug": "compact",
         "name": "Compact, no labels",
-        "description": "Two unlabelled detail lines and tighter spacing — the shape for a narrow form section.",
+        "description": "Two unlabelled detail lines and tighter spacing — the shape for a narrow form section. Load more adds eight at a time.",
         "props": {
-          "pageSize": 25,
+          "pageSize": 8,
           "paging": "loadMore",
           "detailColumns": 2,
           "showLabels": false,
@@ -87,9 +86,9 @@
       {
         "slug": "search",
         "name": "With a search box",
-        "description": "Show search on, matching anywhere in the account name. Type and watch the call log below: the expression, the paging reset and the refresh are all real, and only the server behind them is missing.",
+        "description": "Show search on, matching anywhere in the account name. Type part of a name and the list narrows; the call log below shows the expression the control sent.",
         "props": {
-          "pageSize": 25,
+          "pageSize": 8,
           "paging": "pager",
           "detailColumns": 2,
           "showLabels": true,
