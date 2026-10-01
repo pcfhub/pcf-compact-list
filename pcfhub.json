@@ -44,7 +44,7 @@
     "limitations": [
       "Search narrows the list. With Show search on, the control calls dataset.filtering.setFilter() and then refresh(), and the demo applies the expression to the whole fixture on that fetch, as a real view does on the server; the count and the filteredRecordCount output follow, and clearing the box brings every account back. The match ignores case, as Dataverse\u2019s default collation does. The call log under the demo shows the rest of what the control does: the debounce, the expression and the paging reset.",
       "Both paging modes work against the fixture. Every preset asks for eight records a page, so the 24 accounts make three pages: Comfortable and With a search box page with Previous and Next, and Compact, no labels adds eight at a time with Load more until all 24 are shown. What a real view adds is size: the page size is a request the platform may clamp, and a large view may not count its rows.",
-      "Clicking an item calls dataset.openDatasetItem(), which the harness logs as a mock call: there is no Dataverse behind this origin and no form to open. The openedRecordId output still updates, so the value a canvas app would react to is visible."
+      "Clicking an item calls dataset.openDatasetItem(). There is no form behind this origin to open, so the event log under the demo names the record that would have opened; switch the toolbar's host to Canvas app and the same call raises OnSelect instead, as it does there. The openedRecordId output updates on both, so the value a canvas app would react to is visible."
     ],
     "presets": [
       {
