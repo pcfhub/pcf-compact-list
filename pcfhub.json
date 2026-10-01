@@ -3,6 +3,7 @@
   "slug": "pcf-compact-list",
   "name": "Compact List",
   "tagline": "A Dataverse view as a stacked list of records, for narrow spaces.",
+  "summary": "Shows a view as a stack of items instead of a table: a title line from the view's primary column, and a few labelled detail lines beneath it. There is no header row and nothing scrolls sideways, so it fits a form's side column, a narrow section or a phone layout.\n\n- Empty values are skipped rather than left as blank lines\n- No React and no platform libraries, so there is little to download\n- No sorting or row selection; use Data Table when you have the width",
   "category": "data",
   "hosts": ["canvas", "model-driven"],
   "tags": [
