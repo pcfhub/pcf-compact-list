@@ -8,6 +8,10 @@ order: 1
 
 A Dataverse view as a stacked list of records, for narrow spaces.
 
+:::callout{type=warning}
+**Reference example · built with AI.** This control was written with AI (Claude) and tested on a live Dataverse form; its code has not been reviewed line by line. It is published as a worked example and is not maintained — read the source and [SPEC.md](https://github.com/pcfhub/pcf-compact-list/blob/main/SPEC.md) (what was measured on the form) before you use it. Fixes are not guaranteed.
+:::
+
 ::image{src=media/screenshot.png alt="Compact List on an Accounts subgrid: three accounts as stacked items, each with its name as a link above labelled Status, Status Reason and Created On lines, over a pager reading 1–3 of 6" zoom}
 
 Each record becomes one item: a title line taken from the view's primary column,

@@ -13,6 +13,8 @@
     "filter",
     "no-react"
   ],
+  "supportLevel": "reference",
+  "builtWith": "ai",
   "control": {
     "namespace": "PCFHub",
     "constructor": "CompactList",
