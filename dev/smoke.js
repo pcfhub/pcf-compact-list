@@ -604,9 +604,7 @@ for (const [what, selector] of [['magnifier', '.CompactList-searchIcon'], ['clea
 
     check(
         `and is filled with currentColor, so the stylesheet decides the ${what}'s colour`,
-        view
-            .find(selector)
-            .querySelectorAll('path')
+        Array.from(view.find(selector).querySelectorAll('path'))
             .every((path) => path.getAttribute('fill') === 'currentColor'),
     );
 
